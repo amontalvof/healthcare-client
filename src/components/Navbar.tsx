@@ -1,11 +1,10 @@
-import { useRef } from 'react';
-import { Link } from 'react-router';
-import Lottie, { LottieRefCurrentProps } from 'lottie-react';
-import Logo from '../assets/icons/online-health-report.json';
+import { Link as RouterLink } from 'react-router';
+import { Link as ScrollLink } from 'react-scroll';
+import Lottie from 'lottie-react';
+import Logo from '../assets/icons/corona-vaccine.json';
 import {
     NavigationMenu,
     NavigationMenuItem,
-    NavigationMenuLink,
     NavigationMenuList,
     navigationMenuTriggerStyle,
 } from './ui/navigation-menu';
@@ -20,6 +19,7 @@ import {
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import RenderIf from './RenderIf';
+import { twMerge } from 'tailwind-merge';
 
 const user = {
     name: 'John Doe',
@@ -27,68 +27,58 @@ const user = {
 };
 
 const Navbar = () => {
-    const lottieRef = useRef<LottieRefCurrentProps | null>(null);
-
-    const handlePlay = () => {
-        lottieRef.current?.play();
-    };
-
-    const handleStop = () => {
-        lottieRef.current?.stop();
-    };
     return (
         <div className="flex items-center justify-between text-sm py-1 mb-5 border-b border-gray-300 ">
-            <Link
+            <RouterLink
                 to="/"
                 className="w-[50px] h-[50px] cursor-pointer p-0 border-0 bg-transparent"
-                onMouseEnter={handlePlay}
-                onMouseLeave={handleStop}
                 aria-label="Play animation"
             >
                 <Lottie
-                    lottieRef={lottieRef}
                     animationData={Logo}
                     alt="logo"
-                    autoplay={false}
+                    loop={true}
+                    autoplay={true}
                 />
-            </Link>
+            </RouterLink>
             <NavigationMenu>
                 <NavigationMenuList>
                     <NavigationMenuItem>
-                        <Link to="/">
-                            <NavigationMenuLink
-                                className={navigationMenuTriggerStyle()}
-                            >
-                                HOME
-                            </NavigationMenuLink>
-                        </Link>
+                        <RouterLink
+                            to="/"
+                            className={navigationMenuTriggerStyle()}
+                        >
+                            HOME
+                        </RouterLink>
                     </NavigationMenuItem>
                     <NavigationMenuItem>
-                        <Link to="/doctors">
-                            <NavigationMenuLink
-                                className={navigationMenuTriggerStyle()}
-                            >
-                                ALL DOCTORS
-                            </NavigationMenuLink>
-                        </Link>
+                        <RouterLink
+                            to="/doctors"
+                            className={navigationMenuTriggerStyle()}
+                        >
+                            ALL DOCTORS
+                        </RouterLink>
                     </NavigationMenuItem>
                     <NavigationMenuItem>
-                        <Link to="/about">
-                            <NavigationMenuLink
-                                className={navigationMenuTriggerStyle()}
-                            >
-                                ABOUT
-                            </NavigationMenuLink>
-                        </Link>
+                        <RouterLink
+                            to="/appointments"
+                            className={navigationMenuTriggerStyle()}
+                        >
+                            MY APPOINTMENTS
+                        </RouterLink>
                     </NavigationMenuItem>
                     <NavigationMenuItem>
-                        <Link to="/contact">
-                            <NavigationMenuLink
-                                className={navigationMenuTriggerStyle()}
-                            >
-                                CONTACT
-                            </NavigationMenuLink>
-                        </Link>
+                        <ScrollLink
+                            to="contact"
+                            smooth={true}
+                            duration={500}
+                            className={twMerge(
+                                navigationMenuTriggerStyle(),
+                                'cursor-pointer'
+                            )}
+                        >
+                            CONTACT
+                        </ScrollLink>
                     </NavigationMenuItem>
                 </NavigationMenuList>
             </NavigationMenu>
@@ -97,7 +87,7 @@ const Navbar = () => {
                     ifTrue={!user}
                     ifChild={
                         <Button className="cursor-pointer">
-                            Create Account
+                            Register/Login
                         </Button>
                     }
                     elseChild={
@@ -106,8 +96,8 @@ const Navbar = () => {
                                 <button className="flex items-center focus:outline-none">
                                     <Avatar className="h-8 w-8 cursor-pointer">
                                         <AvatarImage
-                                            src={user.image}
-                                            alt={user.name}
+                                            src={user?.image}
+                                            alt={user?.name}
                                         />
                                         <AvatarFallback>
                                             {user?.name?.[0] || 'U'}
@@ -121,19 +111,19 @@ const Navbar = () => {
                                 forceMount
                             >
                                 <DropdownMenuLabel>
-                                    {user.name}
+                                    {user?.name}
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <Link to="/profile">
+                                <RouterLink to="/profile">
                                     <DropdownMenuItem className="cursor-pointer">
                                         My Profile
                                     </DropdownMenuItem>
-                                </Link>
-                                <Link to="/appointments">
+                                </RouterLink>
+                                <RouterLink to="/billing">
                                     <DropdownMenuItem className="cursor-pointer">
-                                        My appointments
+                                        Billing
                                     </DropdownMenuItem>
-                                </Link>
+                                </RouterLink>
                                 <DropdownMenuItem
                                     onSelect={() => {}}
                                     className="cursor-pointer"

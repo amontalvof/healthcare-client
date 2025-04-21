@@ -1,17 +1,25 @@
 import { ArrowRight } from 'lucide-react';
+import { twMerge } from 'tailwind-merge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-scroll';
 import groupProfiles from '../assets/images/group_profiles.png';
 import headerImage from '../assets/images/header_img.png';
+import { colors } from '@/constants';
 
 const Header = () => {
+    console.log(colors.mainGray);
     return (
-        <div className="flex flex-col md:flex-row flex-wrap bg-pink-400 rounded-lg px-6 md:px-10 lg:px-20">
+        <div
+            className={twMerge(
+                'flex flex-col md:flex-row flex-wrap rounded-lg px-6 md:px-10 lg:px-20',
+                `bg-[${colors.mainGray}]`
+            )}
+        >
             <div className="md:w-1/2 flex flex-col items-start justify-center gap-4 py-10 m-auto md:py-[10vw] md:mb-[-30px]">
-                <p className="text-3xl md:text-4xl lg:text-5xl text-white font-semibold leading-tight md:leading-tight lg:leading-tight">
+                <p className="text-3xl md:text-4xl lg:text-5xl  font-semibold leading-tight md:leading-tight lg:leading-tight">
                     Book Appointment <br /> With Trusted Doctors
                 </p>
-                <div className="flex flex-col md:flex-row items-center gap-3 text-white text-sm font-normal">
+                <div className="flex flex-col md:flex-row items-center gap-3  text-sm font-normal">
                     <img
                         className="w-28"
                         src={groupProfiles}
@@ -31,7 +39,7 @@ const Header = () => {
             </div>
             <div className="md:w-1/2 relative">
                 <img
-                    className="w-full md:absolute bottom-0 h-auto rounded-lg"
+                    className="md:w-[100%] 2xl:w-[80%] md:absolute bottom-0 h-auto rounded-lg"
                     src={headerImage}
                     alt="header"
                 />
