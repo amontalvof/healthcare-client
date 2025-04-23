@@ -18,8 +18,9 @@ import {
     DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import RenderIf from './RenderIf';
+
 import { twMerge } from 'tailwind-merge';
+import RenderIf from './RenderIf';
 
 const user = {
     name: 'John Doe',
@@ -28,7 +29,7 @@ const user = {
 
 const Navbar = () => {
     return (
-        <div className="flex items-center justify-between text-sm py-1 mb-5 border-b border-gray-300 ">
+        <div className="flex items-center justify-around text-sm py-1 mb-5 border-b border-gray-300 sticky top-0 z-50 bg-white w-full">
             <RouterLink
                 to="/"
                 className="w-[50px] h-[50px] cursor-pointer p-0 border-0 bg-transparent"
@@ -43,7 +44,7 @@ const Navbar = () => {
             </RouterLink>
             <NavigationMenu>
                 <NavigationMenuList>
-                    <NavigationMenuItem>
+                    <NavigationMenuItem className="hover:shadow-md rounded-md">
                         <RouterLink
                             to="/"
                             className={navigationMenuTriggerStyle()}
@@ -51,7 +52,7 @@ const Navbar = () => {
                             HOME
                         </RouterLink>
                     </NavigationMenuItem>
-                    <NavigationMenuItem>
+                    <NavigationMenuItem className="hover:shadow-md rounded-md">
                         <RouterLink
                             to="/doctors"
                             className={navigationMenuTriggerStyle()}
@@ -59,7 +60,7 @@ const Navbar = () => {
                             ALL DOCTORS
                         </RouterLink>
                     </NavigationMenuItem>
-                    <NavigationMenuItem>
+                    <NavigationMenuItem className="hover:shadow-md rounded-md">
                         <RouterLink
                             to="/appointments"
                             className={navigationMenuTriggerStyle()}
@@ -67,7 +68,7 @@ const Navbar = () => {
                             MY APPOINTMENTS
                         </RouterLink>
                     </NavigationMenuItem>
-                    <NavigationMenuItem>
+                    <NavigationMenuItem className="hover:shadow-md rounded-md">
                         <ScrollLink
                             to="contact"
                             smooth={true}

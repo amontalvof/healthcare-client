@@ -1,5 +1,4 @@
-import Header from '@/components/Header';
-import SpecialtyMenu from '@/components/SpecialtyMenu';
+import { Header, SpecialtyMenu } from '@/components';
 
 const Home = () => {
     return (
