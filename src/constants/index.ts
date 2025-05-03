@@ -41,3 +41,9 @@ export const specialtyData = [
 export const colors = {
     mainGray: '#B2C2DC',
 };
+
+export enum AuthTypes {
+    LOGIN = 'login',
+    REGISTER = 'register',
+    FORGOT_PASSWORD = 'forgot-password',
+}

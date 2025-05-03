@@ -7,7 +7,6 @@ import headerImage from '../assets/images/header_img.png';
 import { colors } from '@/constants';
 
 const Header = () => {
-    console.log(colors.mainGray);
     return (
         <div
             className={twMerge(

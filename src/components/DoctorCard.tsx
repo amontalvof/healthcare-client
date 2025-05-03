@@ -1,4 +1,5 @@
 import React from 'react';
+import { animateScroll as scroll } from 'react-scroll';
 import {
     Card,
     CardHeader,
@@ -56,7 +57,13 @@ const DoctorCard: React.FC<DoctorCardProps> = ({
             <CardFooter className="pt-0">
                 <Button
                     className="w-full cursor-pointer"
-                    onClick={() => navigate(`/appointments/${id}`)}
+                    onClick={() => {
+                        navigate(`/appointments/${id}`);
+                        scroll.scrollToTop({
+                            duration: 1,
+                            smooth: true,
+                        });
+                    }}
                 >
                     Book Appointment
                 </Button>

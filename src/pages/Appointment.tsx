@@ -2,8 +2,7 @@ import { Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import doctorFallback from '../assets/images/doctor.webp';
 import { Button } from '@/components/ui/button';
-import PickerDate from '@/components/PickerDate';
-import PickerTime from '@/components/PickerTime';
+import { PickerDate, PickerTime } from '@/components';
 
 const docInfo = {
     name: 'Dr. John Doe',
