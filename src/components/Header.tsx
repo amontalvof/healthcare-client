@@ -4,14 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-scroll';
 import groupProfiles from '../assets/images/group_profiles.png';
 import headerImage from '../assets/images/header_img.png';
-import { colors } from '@/constants';
 
 const Header = () => {
     return (
         <div
             className={twMerge(
                 'flex flex-col md:flex-row flex-wrap rounded-lg px-6 md:px-10 lg:px-20',
-                `bg-[${colors.mainGray}]`
+                `bg-[#B2C2DC]`
             )}
         >
             <div className="md:w-1/2 flex flex-col items-start justify-center gap-4 py-10 m-auto md:py-[10vw] md:mb-[-30px]">

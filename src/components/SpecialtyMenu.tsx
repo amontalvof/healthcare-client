@@ -7,7 +7,7 @@ const SpecialtyMenu = () => {
         <Element name="specialty">
             <div className="flex flex-col items-center gap-4 py-16 text-gray-800">
                 <h1 className="text-3xl font-medium">Find by Specialty</h1>
-                <div className="flex sm:justify-center gap-4 pt-5 w-full overflow-scroll">
+                <div className="flex flex-wrap sm:justify-center gap-4 pt-5 w-full overflow-scroll">
                     {specialtyData.map((item, index) => {
                         const keyIndex = `${item.route}-${index}`;
                         return (
@@ -22,12 +22,14 @@ const SpecialtyMenu = () => {
                                 }
                                 key={keyIndex}
                             >
-                                <img
-                                    className="w-16 sm:w-24 mb-2"
-                                    src={item.image}
-                                    alt={item.specialty}
-                                />
-                                <p>{item.specialty}</p>
+                                <div className="flex flex-col items-center w-[100px]">
+                                    <img
+                                        className="w-16 sm:w-24 mb-2"
+                                        src={item.image}
+                                        alt={item.specialty}
+                                    />
+                                    <p>{item.specialty}</p>
+                                </div>
                             </Link>
                         );
                     })}

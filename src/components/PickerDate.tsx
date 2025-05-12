@@ -13,9 +13,13 @@ import {
 interface PickerDateProps {
     /** Dates to disable in the calendar */
     disabledDates?: Date[];
+    buttonClassName?: string;
 }
 
-const PickerDate: FC<PickerDateProps> = ({ disabledDates = [] }) => {
+const PickerDate: FC<PickerDateProps> = ({
+    buttonClassName,
+    disabledDates = [],
+}) => {
     const [date, setDate] = useState<Date>();
 
     const isDateDisabled = (d: Date) => {
@@ -33,8 +37,9 @@ const PickerDate: FC<PickerDateProps> = ({ disabledDates = [] }) => {
                 <Button
                     variant={'outline'}
                     className={cn(
-                        'w-[200px] justify-start text-left font-normal border border-gray-400 cursor-pointer',
-                        !date && 'text-muted-foreground'
+                        'justify-start text-left font-normal cursor-pointer bg-white',
+                        !date && 'text-muted-foreground',
+                        buttonClassName
                     )}
                 >
                     <CalendarIcon />

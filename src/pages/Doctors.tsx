@@ -34,10 +34,10 @@ const Doctors = () => {
             : array.filter((item) => item.specialty === specialty);
 
     return (
-        <div>
+        <div className="ml-5 sm:ml-0">
             <p className="text-lg">Browse through the doctors</p>
-            <div className="flex justify-between">
-                <div className="mt-4 mr-[100px]">
+            <div className="flex flex-col  sm:flex-row sm:justify-between">
+                <div className="my-4 mr-[100px]">
                     <RadioGroup
                         value={specialty}
                         onValueChange={handleRadioGroupChange}

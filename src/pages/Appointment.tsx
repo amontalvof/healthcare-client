@@ -55,7 +55,10 @@ const Appointment = () => {
                 </div>
             </div>
             <div className="sm:ml-74 sm:pl-4 mt-10 flex flex-wrap gap-4">
-                <PickerDate disabledDates={[new Date(2025, 3, 29)]} />
+                <PickerDate
+                    buttonClassName="w-[200px]"
+                    disabledDates={[new Date(2025, 3, 29)]}
+                />
                 <PickerTime disabledTimes={['12:00 PM', '12:30 PM']} />
                 <Button className="w-[200px] cursor-pointer">
                     Book Appointment

@@ -19,10 +19,18 @@ const password = {
     placeholder: 'Enter your password',
 };
 
+const verificationCode = {
+    type: 'text',
+    name: 'verificationCode',
+    label: 'Verification Code',
+    placeholder: '',
+};
+
 const dialogContentMap = {
     [AuthTypes.LOGIN]: [email, password],
     [AuthTypes.REGISTER]: [fullName, email, password],
     [AuthTypes.FORGOT_PASSWORD]: [email],
+    [AuthTypes.VERIFY_ACCOUNT]: [verificationCode],
 };
 
 const resolveAuthDialogContent = (type: AuthTypes) => {

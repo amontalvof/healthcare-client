@@ -29,6 +29,15 @@ const dialogInfoMap = {
             email: '',
         },
     },
+    [AuthTypes.VERIFY_ACCOUNT]: {
+        dialogTitle: 'Verify your account',
+        dialogDescription:
+            'Enter the verification code sent to your email to verify your account',
+        dialogButtonText: 'Verify',
+        defaultValues: {
+            verificationCode: '',
+        },
+    },
 };
 
 const resolveAuthDialogInfo = (type: AuthTypes) => {

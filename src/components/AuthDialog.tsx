@@ -11,16 +11,21 @@ import {
 } from '@/components/ui/dialog';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { z, ZodTypeAny } from 'zod';
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
 } from '@/components/ui/form';
+import {
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSlot,
+} from '@/components/ui/input-otp';
+import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { Input } from '@/components/ui/input';
 import { AuthTypes } from '@/constants';
 import {
@@ -29,9 +34,10 @@ import {
     resolveAuthDialogSchemas,
 } from '@/helpers';
 import { TContentName } from '@/types/AuthDialog';
+import RenderIf from './RenderIf';
 
 const AuthDialog = () => {
-    const [type, setType] = useState(AuthTypes.LOGIN);
+    const [type, setType] = useState(AuthTypes.VERIFY_ACCOUNT);
 
     const { dialogTitle, dialogDescription, dialogButtonText, defaultValues } =
         resolveAuthDialogInfo(type);
@@ -40,7 +46,7 @@ const AuthDialog = () => {
     const formContent = resolveAuthDialogContent(type);
 
     const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(formSchema as ZodTypeAny),
         defaultValues,
     });
 
@@ -91,11 +97,55 @@ const AuthDialog = () => {
                                                 {content.label}
                                             </FormLabel>
                                             <FormControl>
-                                                <Input
-                                                    {...field}
-                                                    type={content.type}
-                                                    placeholder={
-                                                        content.placeholder
+                                                <RenderIf
+                                                    ifTrue={
+                                                        type ===
+                                                        AuthTypes.VERIFY_ACCOUNT
+                                                    }
+                                                    ifChild={
+                                                        <InputOTP
+                                                            maxLength={6}
+                                                            {...field}
+                                                            pattern={
+                                                                REGEXP_ONLY_DIGITS
+                                                            }
+                                                        >
+                                                            <InputOTPGroup>
+                                                                <InputOTPSlot
+                                                                    index={0}
+                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                />
+                                                                <InputOTPSlot
+                                                                    index={1}
+                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                />
+                                                                <InputOTPSlot
+                                                                    index={2}
+                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                />
+                                                                <InputOTPSlot
+                                                                    index={3}
+                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                />
+                                                                <InputOTPSlot
+                                                                    index={4}
+                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                />
+                                                                <InputOTPSlot
+                                                                    index={5}
+                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                />
+                                                            </InputOTPGroup>
+                                                        </InputOTP>
+                                                    }
+                                                    elseChild={
+                                                        <Input
+                                                            {...field}
+                                                            type={content.type}
+                                                            placeholder={
+                                                                content.placeholder
+                                                            }
+                                                        />
                                                     }
                                                 />
                                             </FormControl>
@@ -160,17 +210,29 @@ const PLinks = ({
                     </button>
                 </div>
             )}
-            {type !== AuthTypes.FORGOT_PASSWORD && (
+            {type === AuthTypes.VERIFY_ACCOUNT && (
                 <div>
-                    Forgot your password?{' '}
+                    Didn't receive a code?{' '}
                     <button
                         className="text-primary font-bold cursor-pointer hover:underline"
-                        onClick={() => onClick(AuthTypes.FORGOT_PASSWORD)}
+                        onClick={() => onClick(AuthTypes.VERIFY_ACCOUNT)}
                     >
-                        Click here
+                        Resend code
                     </button>
                 </div>
             )}
+            {type !== AuthTypes.FORGOT_PASSWORD &&
+                type !== AuthTypes.VERIFY_ACCOUNT && (
+                    <div>
+                        Forgot your password?{' '}
+                        <button
+                            className="text-primary font-bold cursor-pointer hover:underline"
+                            onClick={() => onClick(AuthTypes.FORGOT_PASSWORD)}
+                        >
+                            Click here
+                        </button>
+                    </div>
+                )}
         </p>
     );
 };

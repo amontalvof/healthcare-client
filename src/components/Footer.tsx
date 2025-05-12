@@ -9,7 +9,7 @@ const Footer = () => {
             <Separator className="mt-7" />
             <div className="md:mx-10">
                 <div className="flex flex-col sm:grid grid-cols-[4fr_1fr] gap-14 my-10 text-sm">
-                    <div>
+                    <div className="flex flex-col items-center sm:items-start">
                         <div className="relative w-56 h-40">
                             {/* Centered, smaller Lottie */}
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -42,7 +42,7 @@ const Footer = () => {
                                 </text>
                             </svg>
                         </div>
-                        <p className="mt-[-40px] w-full  text-gray-600 leading-6">
+                        <p className="mt-[-40px] w-full text-gray-600 leading-6 p-5 sm:p-0">
                             Lorem ipsum dolor sit amet, consectetur adipisicing
                             elit. Impedit, beatae facere ut libero, doloremque
                             dicta cumque repellat exercitationem iste fugiat,
@@ -50,7 +50,7 @@ const Footer = () => {
                             Harum, fugit repudiandae.
                         </p>
                     </div>
-                    <div className="mt-5">
+                    <div className="mt-0 sm:mt-5 flex flex-col items-center sm:items-start">
                         <p className="text-xl font-medium mb-5">GET IN TOUCH</p>
                         <ul className="flex flex-col gap-2 text-gray-600">
                             <li>+1 (234) 567-8900</li>

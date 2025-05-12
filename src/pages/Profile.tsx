@@ -140,7 +140,7 @@ const Profile = () => {
 
                     <div className="flex flex-col">
                         <Label htmlFor="dob">Date of Birth</Label>
-                        <PickerDate />
+                        <PickerDate buttonClassName="w-full" />
                     </div>
                 </div>
 
