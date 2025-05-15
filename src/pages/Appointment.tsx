@@ -59,7 +59,7 @@ const Appointment = () => {
                     buttonClassName="w-[200px]"
                     disabledDates={[new Date(2025, 3, 29)]}
                 />
-                <PickerTime disabledTimes={['12:00 PM', '12:30 PM']} />
+                <PickerTime disabledTimes={['12:00 PM']} />
                 <Button className="w-[200px] cursor-pointer">
                     Book Appointment
                 </Button>

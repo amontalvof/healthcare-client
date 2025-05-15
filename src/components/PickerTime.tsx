@@ -20,19 +20,19 @@ const PickerTime = ({ disabledTimes = [] }: PickerTimeProps) => {
     const isTimeDisabled = (label: string) => disabledTimes.includes(label);
 
     const times: string[] = [];
-    for (let hour = 9; hour <= 17; hour++) {
-        for (let minute of [0, 30]) {
-            if (hour === 17 && minute > 0) continue;
-            const dt = new Date();
-            dt.setHours(hour, minute, 0, 0);
-            times.push(format(dt, 'h:mm a')); // e.g. "9:00 AM"
+    for (let hour = 8; hour <= 17; hour++) {
+        if (hour === 17) {
+            continue;
         }
+        const dt = new Date();
+        dt.setHours(hour, 0, 0, 0);
+        times.push(format(dt, 'h:mm a'));
     }
 
     return (
         <div className="w-[200px]">
             <Select value={time} onValueChange={handleTimeChange}>
-                <SelectTrigger className="w-full border border-gray-400 cursor-pointer">
+                <SelectTrigger className="w-full cursor-pointer bg-white">
                     <SelectValue
                         placeholder={
                             <p className="flex items-center gap-2 text-sm font-normal text-gray-500">
@@ -48,6 +48,7 @@ const PickerTime = ({ disabledTimes = [] }: PickerTimeProps) => {
                             key={label}
                             value={label}
                             disabled={isTimeDisabled(label)}
+                            className="cursor-pointer"
                         >
                             {label}
                         </SelectItem>
