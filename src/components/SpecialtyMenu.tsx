@@ -1,6 +1,6 @@
 import { Element, animateScroll as scroll } from 'react-scroll';
 import { specialtyData } from '@/constants';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 
 const SpecialtyMenu = () => {
     return (

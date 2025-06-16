@@ -1,6 +1,13 @@
 import { AuthTypes } from '@/constants';
 
-const dialogInfoMap = {
+interface AuthDialogInfo {
+    dialogTitle: string;
+    dialogDescription: string;
+    dialogButtonText: string;
+    defaultValues: Record<string, unknown>;
+}
+
+const dialogInfoMap: Partial<Record<AuthTypes, AuthDialogInfo>> = {
     [AuthTypes.LOGIN]: {
         dialogTitle: 'Login to your account',
         dialogDescription: 'Enter your email and password to login',
@@ -40,8 +47,10 @@ const dialogInfoMap = {
     },
 };
 
-const resolveAuthDialogInfo = (type: AuthTypes) => {
-    return dialogInfoMap[type] || dialogInfoMap[AuthTypes.LOGIN];
+const resolveAuthDialogInfo = (
+    type: Exclude<AuthTypes, 'resend-code'>
+): AuthDialogInfo => {
+    return dialogInfoMap[type] ?? dialogInfoMap[AuthTypes.LOGIN]!;
 };
 
 export default resolveAuthDialogInfo;

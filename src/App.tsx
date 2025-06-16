@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router';
+import { Route, Routes } from 'react-router-dom';
 import {
     Appointments,
     Appointment,
@@ -8,6 +8,7 @@ import {
     Billing,
 } from './pages';
 import { Footer, Navbar } from '@/components';
+import { PrivateRoute } from './router/PrivateRoute';
 
 const App = () => {
     return (
@@ -21,12 +22,17 @@ const App = () => {
                             <Route index element={<Doctors />} />
                             <Route path=":specialty" element={<Doctors />} />
                         </Route>
-                        <Route path="appointments">
-                            <Route index element={<Appointments />} />
-                            <Route path=":docId" element={<Appointment />} />
+                        <Route element={<PrivateRoute />}>
+                            <Route path="appointments">
+                                <Route index element={<Appointments />} />
+                                <Route
+                                    path=":docId"
+                                    element={<Appointment />}
+                                />
+                            </Route>
+                            <Route path="billing" element={<Billing />} />
+                            <Route path="profile" element={<Profile />} />
                         </Route>
-                        <Route path="billing" element={<Billing />} />
-                        <Route path="profile" element={<Profile />} />
                     </Routes>
                 </main>
                 <Footer />

@@ -23,12 +23,16 @@ const dialogSchemasMap = {
     [AuthTypes.REGISTER]: z.object({ fullName, email, password }),
     [AuthTypes.FORGOT_PASSWORD]: z.object({ email }),
     [AuthTypes.VERIFY_ACCOUNT]: z.object({
+        email,
         verificationCode: z
             .string()
             .min(6, {
                 message: 'Verification code must be at least 6 characters.',
             })
             .max(6),
+    }),
+    [AuthTypes.RESEND_CODE]: z.object({
+        email,
     }),
 };
 

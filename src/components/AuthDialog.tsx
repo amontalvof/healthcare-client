@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import {
     Dialog,
     DialogContent,
@@ -35,12 +38,55 @@ import {
 } from '@/helpers';
 import { TContentName } from '@/types/AuthDialog';
 import RenderIf from './RenderIf';
+import { authQueries } from '@/api/auth';
+import { useAuthStore } from '@/zustand/auth';
 
 const AuthDialog = () => {
-    const [type, setType] = useState(AuthTypes.VERIFY_ACCOUNT);
-
+    const setCredentials = useAuthStore((s) => s.setCredentials);
+    const [type, setType] = useState<Exclude<AuthTypes, 'resend-code'>>(
+        AuthTypes.LOGIN
+    );
+    const [showPassword, setShowPassword] = useState(false);
+    const [emailToVerify, setEmailToVerify] = useState('');
     const { dialogTitle, dialogDescription, dialogButtonText, defaultValues } =
         resolveAuthDialogInfo(type);
+
+    const mutation = useMutation({
+        mutationFn: async ({
+            clickedType,
+            values,
+        }: {
+            clickedType: AuthTypes;
+            values: z.infer<typeof formSchema>;
+        }) => {
+            return authQueries(clickedType, values);
+        },
+        onSuccess: (data, { clickedType }) => {
+            switch (clickedType) {
+                case AuthTypes.REGISTER:
+                    setType(AuthTypes.VERIFY_ACCOUNT);
+                    setEmailToVerify(data.email);
+                    break;
+                case AuthTypes.VERIFY_ACCOUNT:
+                    toast.success('Account verified successfully!');
+                    setType(AuthTypes.LOGIN);
+                    form.reset();
+                    break;
+                case AuthTypes.LOGIN:
+                    setCredentials(data.accessToken);
+                    break;
+                default:
+                    break;
+            }
+        },
+        onError: (error) => {
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : 'An error occurred while processing your request.'
+            );
+        },
+    });
 
     const formSchema = resolveAuthDialogSchemas(type);
     const formContent = resolveAuthDialogContent(type);
@@ -51,7 +97,14 @@ const AuthDialog = () => {
     });
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        console.log(values);
+        if (type === AuthTypes.VERIFY_ACCOUNT && 'verificationCode' in values) {
+            const newVales = {
+                code: values.verificationCode,
+                email: emailToVerify,
+            };
+            return mutation.mutate({ clickedType: type, values: newVales });
+        }
+        return mutation.mutate({ clickedType: type, values });
     };
 
     const handleOpenChange = (open: boolean) => {
@@ -63,6 +116,12 @@ const AuthDialog = () => {
     };
 
     const handlePLinksClick = (newType: AuthTypes) => {
+        if (newType === AuthTypes.RESEND_CODE) {
+            return mutation.mutate({
+                clickedType: newType,
+                values: { email: emailToVerify },
+            });
+        }
         setType(newType);
         form.reset();
     };
@@ -84,77 +143,140 @@ const AuthDialog = () => {
                                 {dialogDescription}
                             </DialogDescription>
                         </DialogHeader>
-                        {formContent.map((content, index) => {
-                            const keyIndex = `${content.name}-${index}`;
-                            return (
-                                <FormField
-                                    key={keyIndex}
-                                    control={form.control}
-                                    name={content.name as TContentName}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>
-                                                {content.label}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <RenderIf
-                                                    ifTrue={
-                                                        type ===
-                                                        AuthTypes.VERIFY_ACCOUNT
-                                                    }
-                                                    ifChild={
-                                                        <InputOTP
-                                                            maxLength={6}
-                                                            {...field}
-                                                            pattern={
-                                                                REGEXP_ONLY_DIGITS
-                                                            }
-                                                        >
-                                                            <InputOTPGroup>
-                                                                <InputOTPSlot
-                                                                    index={0}
-                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                        {formContent.map(
+                            (
+                                content: {
+                                    name: string;
+                                    label: string;
+                                    type: string;
+                                    placeholder?: string;
+                                },
+                                index: number
+                            ) => {
+                                const keyIndex = `${content.name}-${index}`;
+                                return (
+                                    <FormField
+                                        key={keyIndex}
+                                        control={form.control}
+                                        name={content.name as TContentName}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>
+                                                    {content.label}
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <RenderIf
+                                                        ifTrue={
+                                                            type ===
+                                                            AuthTypes.VERIFY_ACCOUNT
+                                                        }
+                                                        ifChild={
+                                                            <InputOTP
+                                                                maxLength={6}
+                                                                {...field}
+                                                                pattern={
+                                                                    REGEXP_ONLY_DIGITS
+                                                                }
+                                                            >
+                                                                <InputOTPGroup>
+                                                                    <InputOTPSlot
+                                                                        index={
+                                                                            0
+                                                                        }
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                    />
+                                                                    <InputOTPSlot
+                                                                        index={
+                                                                            1
+                                                                        }
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                    />
+                                                                    <InputOTPSlot
+                                                                        index={
+                                                                            2
+                                                                        }
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                    />
+                                                                    <InputOTPSlot
+                                                                        index={
+                                                                            3
+                                                                        }
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                    />
+                                                                    <InputOTPSlot
+                                                                        index={
+                                                                            4
+                                                                        }
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                    />
+                                                                    <InputOTPSlot
+                                                                        index={
+                                                                            5
+                                                                        }
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                    />
+                                                                </InputOTPGroup>
+                                                            </InputOTP>
+                                                        }
+                                                        elseChild={
+                                                            content.type ===
+                                                            'password' ? (
+                                                                <div className="relative">
+                                                                    <Input
+                                                                        {...field}
+                                                                        type={
+                                                                            showPassword
+                                                                                ? 'text'
+                                                                                : 'password'
+                                                                        }
+                                                                        placeholder={
+                                                                            content.placeholder
+                                                                        }
+                                                                        className="pr-10"
+                                                                    />
+                                                                    <button
+                                                                        type="button"
+                                                                        className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                                                                        tabIndex={
+                                                                            -1
+                                                                        }
+                                                                        onClick={() =>
+                                                                            setShowPassword(
+                                                                                (
+                                                                                    prev
+                                                                                ) =>
+                                                                                    !prev
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        {showPassword ? (
+                                                                            <EyeOff className="w-5 h-5" />
+                                                                        ) : (
+                                                                            <Eye className="w-5 h-5" />
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <Input
+                                                                    {...field}
+                                                                    type={
+                                                                        content.type
+                                                                    }
+                                                                    placeholder={
+                                                                        content.placeholder
+                                                                    }
                                                                 />
-                                                                <InputOTPSlot
-                                                                    index={1}
-                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                                                                />
-                                                                <InputOTPSlot
-                                                                    index={2}
-                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                                                                />
-                                                                <InputOTPSlot
-                                                                    index={3}
-                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                                                                />
-                                                                <InputOTPSlot
-                                                                    index={4}
-                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                                                                />
-                                                                <InputOTPSlot
-                                                                    index={5}
-                                                                    className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
-                                                                />
-                                                            </InputOTPGroup>
-                                                        </InputOTP>
-                                                    }
-                                                    elseChild={
-                                                        <Input
-                                                            {...field}
-                                                            type={content.type}
-                                                            placeholder={
-                                                                content.placeholder
-                                                            }
-                                                        />
-                                                    }
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            );
-                        })}
+                                                            )
+                                                        }
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                );
+                            }
+                        )}
                         <PLinks type={type} onClick={handlePLinksClick} />
                         <DialogFooter>
                             <Button className="cursor-pointer" type="submit">
@@ -175,18 +297,51 @@ const PLinks = ({
     type: AuthTypes;
     onClick: (newType: AuthTypes) => void;
 }) => {
+    const [counter, setCounter] = useState(0);
+
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (counter > 0) {
+            timer = setTimeout(() => setCounter(counter - 1), 1000);
+        }
+        return () => clearTimeout(timer);
+    }, [counter]);
+
+    useEffect(() => {
+        if (type !== AuthTypes.VERIFY_ACCOUNT) {
+            setCounter(0);
+        }
+    }, [type]);
+
+    const handleResend = () => {
+        onClick(AuthTypes.RESEND_CODE);
+        setCounter(60);
+    };
     return (
-        <p className="text-sm text-gray-600 space-y-2">
+        <div className="text-sm text-gray-600 space-y-2">
             {type === AuthTypes.LOGIN && (
-                <div>
-                    Don't have an account?{' '}
-                    <button
-                        className="text-primary font-bold cursor-pointer hover:underline"
-                        onClick={() => onClick(AuthTypes.REGISTER)}
-                    >
-                        Register
-                    </button>
-                </div>
+                <>
+                    <div>
+                        Don't have an account?{' '}
+                        <button
+                            className="text-primary font-bold cursor-pointer hover:underline"
+                            onClick={() => onClick(AuthTypes.REGISTER)}
+                            type="button"
+                        >
+                            Register
+                        </button>
+                    </div>
+                    {/* <div>
+                        Forgot your password?{' '}
+                        <button
+                            className="text-primary font-bold cursor-pointer hover:underline"
+                            onClick={() => onClick(AuthTypes.FORGOT_PASSWORD)}
+                            type="button"
+                        >
+                            Click here
+                        </button>
+                    </div> */}
+                </>
             )}
             {type === AuthTypes.REGISTER && (
                 <div>
@@ -194,6 +349,7 @@ const PLinks = ({
                     <button
                         className="text-primary font-bold cursor-pointer hover:underline"
                         onClick={() => onClick(AuthTypes.LOGIN)}
+                        type="button"
                     >
                         Login
                     </button>
@@ -205,6 +361,7 @@ const PLinks = ({
                     <button
                         className="text-primary font-bold cursor-pointer hover:underline"
                         onClick={() => onClick(AuthTypes.LOGIN)}
+                        type="button"
                     >
                         Login
                     </button>
@@ -214,26 +371,24 @@ const PLinks = ({
                 <div>
                     Didn't receive a code?{' '}
                     <button
-                        className="text-primary font-bold cursor-pointer hover:underline"
-                        onClick={() => onClick(AuthTypes.VERIFY_ACCOUNT)}
+                        className={`font-bold cursor-pointer hover:underline transition-colors
+                            ${
+                                counter > 0
+                                    ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                                    : 'text-primary bg-transparent'
+                            }
+                        `}
+                        onClick={handleResend}
+                        type="button"
+                        disabled={counter > 0}
                     >
-                        Resend code
+                        {counter > 0
+                            ? `Resend code (${counter}s)`
+                            : 'Resend code'}
                     </button>
                 </div>
             )}
-            {type !== AuthTypes.FORGOT_PASSWORD &&
-                type !== AuthTypes.VERIFY_ACCOUNT && (
-                    <div>
-                        Forgot your password?{' '}
-                        <button
-                            className="text-primary font-bold cursor-pointer hover:underline"
-                            onClick={() => onClick(AuthTypes.FORGOT_PASSWORD)}
-                        >
-                            Click here
-                        </button>
-                    </div>
-                )}
-        </p>
+        </div>
     );
 };
 

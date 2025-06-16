@@ -2,7 +2,7 @@ import { DoctorCard } from '@/components';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { specialtyData } from '@/constants';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const Doctors = () => {
     const { specialty = 'all' } = useParams();

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router';
+import { Link as RouterLink } from 'react-router-dom';
 import { Link as ScrollLink, animateScroll as scroll } from 'react-scroll';
 import Lottie from 'lottie-react';
 import Logo from '../assets/icons/corona-vaccine.json';
@@ -22,7 +22,6 @@ import {
     Sheet,
     SheetContent,
     SheetHeader,
-    SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -30,16 +29,14 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { twMerge } from 'tailwind-merge';
 import RenderIf from './RenderIf';
 import AuthDialog from './AuthDialog';
-
-// const user = {
-//     name: 'John Doe',
-//     image: 'https://randomuser.me/api/portraits/men/64.jpg',
-// };
-
-const user: any = null;
+import { useAuthStore } from '@/zustand/auth';
+import resolveUserInfo from '@/helpers/resolveUserInfo';
+import { IUserAuth } from '@/types/AuthDialog';
 
 const Navbar = () => {
     const [open, setOpen] = useState(false);
+    const { accessToken, clearCredentials } = useAuthStore((state) => state);
+    const user = resolveUserInfo(accessToken);
 
     const handleCloseSheet = () => {
         setOpen(false);
@@ -52,6 +49,7 @@ const Navbar = () => {
             smooth: true,
         });
     };
+
     return (
         <div className="flex items-center justify-between sm:justify-around text-sm py-1 mb-5 border-b border-gray-300 sticky top-0 z-50 bg-white w-full">
             <div className="block sm:hidden">
@@ -85,6 +83,7 @@ const Navbar = () => {
                 handleScroll={handleScroll}
                 handleCloseSheet={handleCloseSheet}
                 className="hidden sm:block"
+                user={user}
             />
             <div>
                 <RenderIf
@@ -97,10 +96,10 @@ const Navbar = () => {
                                     <Avatar className="h-8 w-8 cursor-pointer mx-5 sm:mx-0">
                                         <AvatarImage
                                             src={user?.image}
-                                            alt={user?.name}
+                                            alt={user?.fullName}
                                         />
                                         <AvatarFallback>
-                                            {user?.name?.[0] ?? 'U'}
+                                            {user?.fullName?.[0] ?? 'U'}
                                         </AvatarFallback>
                                     </Avatar>
                                 </button>
@@ -111,7 +110,7 @@ const Navbar = () => {
                                 forceMount
                             >
                                 <DropdownMenuLabel>
-                                    {user?.name}
+                                    {user?.fullName}
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <RouterLink to="/profile">
@@ -125,7 +124,7 @@ const Navbar = () => {
                                     </DropdownMenuItem>
                                 </RouterLink>
                                 <DropdownMenuItem
-                                    onSelect={() => {}}
+                                    onSelect={() => clearCredentials()}
                                     className="cursor-pointer"
                                 >
                                     Logout
@@ -143,10 +142,12 @@ const NavMenu = ({
     handleScroll,
     handleCloseSheet,
     className,
+    user,
 }: {
     handleScroll: () => void;
     handleCloseSheet: () => void;
     className?: string;
+    user?: IUserAuth | null;
 }) => {
     return (
         <NavigationMenu className={className}>
@@ -170,17 +171,20 @@ const NavMenu = ({
                         ALL DOCTORS
                     </RouterLink>
                 </NavigationMenuItem>
-                <NavigationMenuItem
-                    className="hover:shadow-md rounded-md"
-                    onClick={handleScroll}
-                >
-                    <RouterLink
-                        to="/appointments"
-                        className={navigationMenuTriggerStyle()}
+                {user && (
+                    <NavigationMenuItem
+                        className="hover:shadow-md rounded-md"
+                        onClick={handleScroll}
                     >
-                        MY APPOINTMENTS
-                    </RouterLink>
-                </NavigationMenuItem>
+                        <RouterLink
+                            to="/appointments"
+                            className={navigationMenuTriggerStyle()}
+                        >
+                            MY APPOINTMENTS
+                        </RouterLink>
+                    </NavigationMenuItem>
+                )}
+
                 <NavigationMenuItem className="hover:shadow-md rounded-md">
                     <ScrollLink
                         to="contact"
