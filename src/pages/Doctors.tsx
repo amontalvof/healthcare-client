@@ -1,12 +1,21 @@
 import { DoctorCard } from '@/components';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { specialtyData } from '@/constants';
+import { fetchWithoutToken } from '@/helpers/fetch';
+import { IDoctorSpecialty } from '@/types/Doctor';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const Doctors = () => {
     const { specialty = 'all' } = useParams();
     const navigate = useNavigate();
+
+    const { data: specialtyData = [] } = useQuery({
+        queryKey: ['specialties'],
+        queryFn: () => fetchWithoutToken('/doctor/specialties'),
+        staleTime: Infinity,
+        gcTime: Infinity,
+    });
 
     const handleRadioGroupChange = (value: string) => {
         const newValue = value === 'all' ? '' : `/${value}`;
@@ -50,8 +59,8 @@ const Doctors = () => {
                             />
                             <Label htmlFor="all">All Doctors</Label>
                         </div>
-                        {specialtyData.map((item, index) => {
-                            const keyIndex = `${item.specialty}-${index}`;
+                        {specialtyData.map((item: IDoctorSpecialty) => {
+                            const keyIndex = `${item.name}-${item.id}`;
                             return (
                                 <div
                                     className="flex items-center space-x-2"
@@ -63,7 +72,7 @@ const Doctors = () => {
                                         className="border border-gray-500"
                                     />
                                     <Label htmlFor={item.route}>
-                                        {item.specialty}
+                                        {item.name}
                                     </Label>
                                 </div>
                             );
