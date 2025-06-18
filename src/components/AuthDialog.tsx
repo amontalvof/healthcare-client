@@ -129,7 +129,7 @@ const AuthDialog = () => {
     return (
         <Dialog onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button className="cursor-pointer">Login</Button>
+                <Button className="cursor-pointer mr-3 sm:mr-0">Login</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <Form {...form}>

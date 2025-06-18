@@ -1,7 +1,4 @@
-import { ArrowRight } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-scroll';
 import groupProfiles from '../assets/images/group_profiles.png';
 import headerImage from '../assets/images/header_img.png';
 
@@ -29,11 +26,6 @@ const Header = () => {
                         clicks.
                     </p>
                 </div>
-                <Link to="specialty" smooth={true} duration={500}>
-                    <Button className="cursor-pointer hover:scale-105 transition-all duration-300">
-                        Book Appointment <ArrowRight />
-                    </Button>
-                </Link>
             </div>
             <div className="md:w-1/2 relative">
                 <img

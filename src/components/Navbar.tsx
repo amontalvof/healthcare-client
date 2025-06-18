@@ -60,6 +60,7 @@ const Navbar = () => {
                     <SheetContent side="left">
                         <SheetHeader>
                             <NavMenu
+                                user={user}
                                 handleScroll={handleScroll}
                                 handleCloseSheet={handleCloseSheet}
                             />
@@ -171,7 +172,7 @@ const NavMenu = ({
                         ALL DOCTORS
                     </RouterLink>
                 </NavigationMenuItem>
-                {user && (
+                {!!user && (
                     <NavigationMenuItem
                         className="hover:shadow-md rounded-md"
                         onClick={handleScroll}
@@ -184,7 +185,6 @@ const NavMenu = ({
                         </RouterLink>
                     </NavigationMenuItem>
                 )}
-
                 <NavigationMenuItem className="hover:shadow-md rounded-md">
                     <ScrollLink
                         to="contact"

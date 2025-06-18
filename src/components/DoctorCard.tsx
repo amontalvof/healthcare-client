@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Calendar } from 'lucide-react';
+import { Clock3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface DoctorCardProps {
@@ -32,7 +32,7 @@ const DoctorCard: React.FC<DoctorCardProps> = ({
     return (
         <Card className="w-64 aspect-square bg-white shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col justify-center">
             <CardHeader className="flex items-center space-x-4">
-                <Avatar className="w-16 h-16">
+                <Avatar className="w-16 h-16 bg-[#B2C2DC]">
                     <AvatarImage src={imageUrl} alt={`${name}'s photo`} />
                     <AvatarFallback>
                         {name.split(' ')[0][0]}
@@ -50,7 +50,7 @@ const DoctorCard: React.FC<DoctorCardProps> = ({
             </CardHeader>
             <CardContent className="flex items-center justify-center">
                 <div className="flex items-center text-sm text-gray-600 space-x-2">
-                    <Calendar className="w-4 h-4 text-primary" />
+                    <Clock3 className="w-4 h-4 text-primary" />
                     <span>{availability}</span>
                 </div>
             </CardContent>

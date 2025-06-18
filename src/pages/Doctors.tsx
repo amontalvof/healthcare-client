@@ -2,19 +2,30 @@ import { DoctorCard } from '@/components';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { fetchWithoutToken } from '@/helpers/fetch';
-import { IDoctorSpecialty } from '@/types/Doctor';
-import { useQuery } from '@tanstack/react-query';
+import { prettyTimeRange } from '@/helpers/prettyTimeRange';
+import { IDoctor, IDoctorSpecialty } from '@/types/Doctor';
+import { useQueries } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const Doctors = () => {
     const { specialty = 'all' } = useParams();
     const navigate = useNavigate();
 
-    const { data: specialtyData = [] } = useQuery({
-        queryKey: ['specialties'],
-        queryFn: () => fetchWithoutToken('/doctor/specialties'),
-        staleTime: Infinity,
-        gcTime: Infinity,
+    const [{ data: specialtyData = [] }, { data: doctors = [] }] = useQueries({
+        queries: [
+            {
+                queryKey: ['specialties'],
+                queryFn: () => fetchWithoutToken('/doctor/specialties'),
+                staleTime: Infinity,
+                gcTime: Infinity,
+            },
+            {
+                queryKey: ['doctors'],
+                queryFn: () => fetchWithoutToken('/doctor'),
+                staleTime: Infinity,
+                gcTime: Infinity,
+            },
+        ],
     });
 
     const handleRadioGroupChange = (value: string) => {
@@ -22,25 +33,12 @@ const Doctors = () => {
         navigate(`/doctors${newValue}`);
     };
 
-    const array = Array.from({ length: 50 }, (_, i) => ({
-        id: i + 1,
-        name: `Doctor ${i + 1}`,
-        specialty: [
-            'general-physician',
-            'gynecologist',
-            'dermatologist',
-            'pediatricians',
-            'neurologist',
-            'gastroenterologist',
-        ][Math.floor(Math.random() * 6)],
-        availability: 'Mon–Fri: 9am–5pm',
-        imageUrl: `https://randomuser.me/api/portraits/men/${i}.jpg`,
-    }));
-
     const filteredDoctors =
         specialty === 'all'
-            ? array
-            : array.filter((item) => item.specialty === specialty);
+            ? doctors
+            : doctors.filter(
+                  (item: IDoctor) => item.specialty.route === specialty
+              );
 
     return (
         <div className="ml-5 sm:ml-0">
@@ -80,14 +78,17 @@ const Doctors = () => {
                     </RadioGroup>
                 </div>
                 <div className="w-full flex flex-wrap gap-4 mt-4">
-                    {filteredDoctors.map((doctor) => {
+                    {filteredDoctors.map((doctor: IDoctor) => {
                         return (
                             <DoctorCard
                                 key={doctor.id}
                                 id={doctor.id}
-                                name={doctor.name}
-                                specialty={doctor.specialty}
-                                availability={doctor.availability}
+                                name={doctor.fullName}
+                                specialty={doctor.specialty.name}
+                                availability={prettyTimeRange(
+                                    doctor.workStart,
+                                    doctor.workEnd
+                                )}
                                 imageUrl={doctor.imageUrl}
                             />
                         );
