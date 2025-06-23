@@ -29,13 +29,15 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { twMerge } from 'tailwind-merge';
 import RenderIf from './RenderIf';
 import AuthDialog from './AuthDialog';
-import { useAuthStore } from '@/zustand/auth';
+import { useAuthCredentials } from '@/zustand/auth';
 import resolveUserInfo from '@/helpers/resolveUserInfo';
 import { IUserAuth } from '@/types/AuthDialog';
 
 const Navbar = () => {
     const [open, setOpen] = useState(false);
-    const { accessToken, clearCredentials } = useAuthStore((state) => state);
+    const { accessToken, clearCredentials } = useAuthCredentials(
+        (state) => state
+    );
     const user = resolveUserInfo(accessToken);
 
     const handleCloseSheet = () => {

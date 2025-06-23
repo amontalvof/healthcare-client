@@ -39,10 +39,13 @@ import {
 import { TContentName } from '@/types/AuthDialog';
 import RenderIf from './RenderIf';
 import { authQueries } from '@/api/auth';
-import { useAuthStore } from '@/zustand/auth';
+import { useAuthCredentials, useAuthDialog } from '@/zustand/auth';
 
 const AuthDialog = () => {
-    const setCredentials = useAuthStore((s) => s.setCredentials);
+    const { isAuthDialogOpen, setAuthDialogOpen } = useAuthDialog(
+        (state) => state
+    );
+    const setCredentials = useAuthCredentials((state) => state.setCredentials);
     const [type, setType] = useState<Exclude<AuthTypes, 'resend-code'>>(
         AuthTypes.LOGIN
     );
@@ -104,15 +107,18 @@ const AuthDialog = () => {
             };
             return mutation.mutate({ clickedType: type, values: newVales });
         }
+        if (type === AuthTypes.LOGIN) {
+            setAuthDialogOpen(false);
+        }
         return mutation.mutate({ clickedType: type, values });
     };
 
     const handleOpenChange = (open: boolean) => {
-        if (open) {
-            return;
+        setAuthDialogOpen(open);
+        if (!open) {
+            setType(AuthTypes.LOGIN);
+            form.reset();
         }
-        setType(AuthTypes.LOGIN);
-        form.reset();
     };
 
     const handlePLinksClick = (newType: AuthTypes) => {
@@ -127,7 +133,7 @@ const AuthDialog = () => {
     };
 
     return (
-        <Dialog onOpenChange={handleOpenChange}>
+        <Dialog open={isAuthDialogOpen} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Button className="cursor-pointer mr-3 sm:mr-0">Login</Button>
             </DialogTrigger>

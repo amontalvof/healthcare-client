@@ -7,7 +7,7 @@ interface AuthState {
     clearCredentials: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
+export const useAuthCredentials = create<AuthState>()(
     persist(
         (set) => ({
             accessToken: null,
@@ -22,3 +22,13 @@ export const useAuthStore = create<AuthState>()(
         }
     )
 );
+
+interface DialogState {
+    isAuthDialogOpen: boolean;
+    setAuthDialogOpen: (open: boolean) => void;
+}
+
+export const useAuthDialog = create<DialogState>((set) => ({
+    isAuthDialogOpen: false,
+    setAuthDialogOpen: (open) => set({ isAuthDialogOpen: open }),
+}));

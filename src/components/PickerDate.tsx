@@ -1,5 +1,12 @@
-import { useState, FC } from 'react';
-import { format, isSameDay } from 'date-fns';
+import { FC } from 'react';
+import {
+    addDays,
+    format,
+    isAfter,
+    isBefore,
+    isSameDay,
+    startOfDay,
+} from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -11,22 +18,36 @@ import {
 } from '@/components/ui/popover';
 
 interface PickerDateProps {
-    /** Dates to disable in the calendar */
+    selectedDate?: Date;
+    onSelectDate: (date?: Date) => void;
     disabledDates?: Date[];
     buttonClassName?: string;
+    disableWeekends?: boolean;
+    amountOfDaysToEnable?: number;
+    disabled?: boolean;
 }
 
 const PickerDate: FC<PickerDateProps> = ({
+    selectedDate,
+    onSelectDate,
     buttonClassName,
+    disableWeekends = false,
+    disabled = false,
+    amountOfDaysToEnable,
     disabledDates = [],
 }) => {
-    const [date, setDate] = useState<Date>();
+    const today = startOfDay(new Date());
+    const lastActiveDay = addDays(today, amountOfDaysToEnable ?? 30);
 
     const isDateDisabled = (d: Date) => {
         const day = d.getDay(); // 0 = Sunday, 6 = Saturday
+        const isDisableWeekends = disableWeekends && (day === 0 || day === 6);
+        const isEnableOnlyThirtyDays =
+            !!amountOfDaysToEnable &&
+            (isBefore(d, today) || isAfter(d, lastActiveDay));
         return (
-            day === 0 ||
-            day === 6 ||
+            isDisableWeekends ||
+            isEnableOnlyThirtyDays ||
             disabledDates.some((dd) => isSameDay(dd, d))
         );
     };
@@ -38,19 +59,24 @@ const PickerDate: FC<PickerDateProps> = ({
                     variant={'outline'}
                     className={cn(
                         'justify-start text-left font-normal cursor-pointer bg-white',
-                        !date && 'text-muted-foreground',
+                        !selectedDate && 'text-muted-foreground',
                         buttonClassName
                     )}
+                    disabled={disabled}
                 >
                     <CalendarIcon />
-                    {date ? format(date, 'PPP') : <span>Pick a date</span>}
+                    {selectedDate ? (
+                        format(selectedDate, 'PPP')
+                    ) : (
+                        <span>Pick a date</span>
+                    )}
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                     mode="single"
-                    selected={date}
-                    onSelect={setDate}
+                    selected={selectedDate}
+                    onSelect={onSelectDate}
                     initialFocus
                     disabled={isDateDisabled}
                 />

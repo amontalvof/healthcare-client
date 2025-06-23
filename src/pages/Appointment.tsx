@@ -1,37 +1,73 @@
-import { Info } from 'lucide-react';
+import { Info, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import doctorFallback from '../assets/images/doctor.webp';
 import { Button } from '@/components/ui/button';
 import { PickerDate, PickerTime } from '@/components';
-
-const docInfo = {
-    name: 'Dr. John Doe',
-    specialty: 'Cardiologist',
-    degree: 'MD',
-    experience: '10 years',
-    fee: 150,
-    about: 'Dr. John Doe is a highly experienced cardiologist with over 10 years of experience in treating heart-related conditions. He is known for his patient-centric approach and has received numerous accolades for his work in the field of cardiology.',
-};
+import { useNavigate, useParams } from 'react-router-dom';
+import { fetchWithoutToken } from '@/helpers/fetch';
+import { useQuery } from '@tanstack/react-query';
+import { IDoctor } from '@/types/Doctor';
+import { HospitalMap } from '@/components/HospitalMap';
+import { useState } from 'react';
 
 const Appointment = () => {
+    const { docId } = useParams<{ docId: string }>();
+    const navigate = useNavigate();
+    const [selectedDate, setSelectedDate] = useState<Date>();
+    const [selectedTime, setSelectedTime] = useState<string>('');
+
+    const { data: doctors = [] } = useQuery<IDoctor[]>({
+        queryKey: ['doctors'],
+        queryFn: () => fetchWithoutToken('/doctor'),
+        staleTime: Infinity,
+        gcTime: Infinity,
+    });
+
+    const handleSelectDate = (date?: Date) => {
+        setSelectedDate(date);
+    };
+
+    const handleSelectTime = (value: string) => setSelectedTime(value);
+
+    const docInfo = doctors.find((doc) => doc.id === Number(docId));
+
+    if (!docInfo) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh] bg-gray-50 px-4">
+                <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-8 max-w-sm text-center space-y-6">
+                    <XCircle className="mx-auto h-12 w-12 " />
+                    <h2 className="text-2xl font-semibold ">
+                        Doctor Not Found
+                    </h2>
+                    <Button
+                        className="w-full cursor-pointer"
+                        onClick={() => navigate(-1)}
+                    >
+                        Go Back
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div>
             <div className="flex flex-col sm:flex-row gap-4">
                 <div>
                     <img
-                        className="w-full sm:max-w-72 rounded-lg border-2 border-gray-300"
-                        src={doctorFallback}
+                        className="w-full sm:max-w-72 rounded-lg border-2 border-[#B2C2DC] bg-[#B2C2DC]"
+                        src={docInfo.imageUrl ?? doctorFallback}
                         alt="doctor"
                         width={150}
                     />
                 </div>
-                <div className="flex-1 border-gray-400 rounded-lg p-8 py-7 bg-white mx-2 sx:mx-0 mt-[-80px] sm:mt-0 shadow-xl">
+                <div className="flex-1 border-gray-400 rounded-lg p-8 py-7 bg-white mx-2 sx:mx-0 sm:mt-0 shadow-xl">
                     <p className="text-2xl font-medium text-gray-900">
-                        {docInfo.name}
+                        {docInfo.fullName}
                     </p>
                     <div className="flex items-center gap-2 text-sm mt-1 text-gray-600">
                         <p>
-                            {docInfo.degree} - {docInfo.specialty}
+                            {docInfo.degree} - {docInfo.specialty.name}
                         </p>
                         <Badge variant="secondary">{docInfo.experience}</Badge>
                     </div>
@@ -43,26 +79,59 @@ const Appointment = () => {
                             {docInfo.about}
                         </p>
                     </div>
-                    <p className="text-gray-500 font-medium mt-4">
+                    <p className="text-gray-500 font-medium mt-2">
                         Appointment fee:{' '}
                         <span className="text-gray-600 font-semibold">
                             {new Intl.NumberFormat('en-US', {
                                 style: 'currency',
                                 currency: 'USD',
-                            }).format(docInfo.fee)}
+                            }).format(docInfo.fees)}
+                        </span>
+                    </p>
+                    <p className="text-gray-500 font-medium mt-2">
+                        Hospital:{' '}
+                        <span className="text-gray-600 font-semibold">
+                            {docInfo.hospital}
+                        </span>
+                    </p>
+                    <p className="text-gray-500 font-medium mt-2">
+                        Insurances accepted:{' '}
+                        <span className="text-gray-600 font-semibold">
+                            {docInfo.insurancesList
+                                .map((insurance) => insurance.name)
+                                .join(', ') || 'None'}
                         </span>
                     </p>
                 </div>
             </div>
             <div className="sm:ml-74 sm:pl-4 mt-10 flex flex-wrap gap-4">
                 <PickerDate
-                    buttonClassName="w-[200px]"
+                    selectedDate={selectedDate}
+                    onSelectDate={handleSelectDate}
+                    disableWeekends={true}
+                    amountOfDaysToEnable={21}
+                    buttonClassName="w-full sm:w-[200px]"
                     disabledDates={[new Date(2025, 3, 29)]}
                 />
-                <PickerTime disabledTimes={['12:00 PM']} />
-                <Button className="w-[200px] cursor-pointer">
+                <PickerTime
+                    disabled={!selectedDate}
+                    selectedTime={selectedTime}
+                    onSelectTime={handleSelectTime}
+                    className="w-full sm:w-[200px]"
+                    disabledTimes={['12:00 PM']}
+                />
+                <Button
+                    className="w-full sm:w-[200px] cursor-pointer"
+                    disabled={!selectedDate || !selectedTime}
+                >
                     Book Appointment
                 </Button>
+            </div>
+            <div className="mt-10 h-[500px]">
+                <HospitalMap
+                    hospitalsNames={[docInfo.hospital]}
+                    hospitals={[docInfo.hospitalAddress]}
+                />
             </div>
         </div>
     );

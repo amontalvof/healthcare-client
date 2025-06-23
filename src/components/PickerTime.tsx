@@ -10,13 +10,20 @@ import { format } from 'date-fns';
 import { Clock3Icon } from 'lucide-react';
 
 interface PickerTimeProps {
-    /** Time labels to disable in the dropdown */
+    selectedTime: string;
+    onSelectTime: (value: string) => void;
     disabledTimes?: string[];
+    className?: string;
+    disabled?: boolean;
 }
 
-const PickerTime = ({ disabledTimes = [] }: PickerTimeProps) => {
-    const [time, setTime] = useState<string>('');
-    const handleTimeChange = (value: string) => setTime(value);
+const PickerTime = ({
+    selectedTime,
+    onSelectTime,
+    className,
+    disabledTimes = [],
+    disabled = false,
+}: PickerTimeProps) => {
     const isTimeDisabled = (label: string) => disabledTimes.includes(label);
 
     const times: string[] = [];
@@ -30,8 +37,12 @@ const PickerTime = ({ disabledTimes = [] }: PickerTimeProps) => {
     }
 
     return (
-        <div className="w-[200px]">
-            <Select value={time} onValueChange={handleTimeChange}>
+        <div className={className}>
+            <Select
+                value={selectedTime}
+                onValueChange={onSelectTime}
+                disabled={disabled}
+            >
                 <SelectTrigger className="w-full cursor-pointer bg-white">
                     <SelectValue
                         placeholder={
