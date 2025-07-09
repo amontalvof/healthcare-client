@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import {
     addDays,
     format,
@@ -25,6 +25,7 @@ interface PickerDateProps {
     disableWeekends?: boolean;
     amountOfDaysToEnable?: number;
     disabled?: boolean;
+    error?: string;
 }
 
 const PickerDate: FC<PickerDateProps> = ({
@@ -34,8 +35,10 @@ const PickerDate: FC<PickerDateProps> = ({
     disableWeekends = false,
     disabled = false,
     amountOfDaysToEnable,
+    error,
     disabledDates = [],
 }) => {
+    const [open, setOpen] = useState(false);
     const today = startOfDay(new Date());
     const lastActiveDay = addDays(today, amountOfDaysToEnable ?? 30);
 
@@ -52,14 +55,23 @@ const PickerDate: FC<PickerDateProps> = ({
         );
     };
 
+    const handleSelect = (date?: Date) => {
+        onSelectDate(date);
+        if (date) {
+            setOpen(false);
+        }
+    };
+
     return (
-        <Popover>
+        <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
                     variant={'outline'}
                     className={cn(
-                        'justify-start text-left font-normal cursor-pointer bg-white',
+                        'justify-start text-left font-normal cursor-pointer bg-white border-gray-400',
                         !selectedDate && 'text-muted-foreground',
+                        error &&
+                            'border-destructive focus-visible:ring-destructive',
                         buttonClassName
                     )}
                     disabled={disabled}
@@ -76,9 +88,12 @@ const PickerDate: FC<PickerDateProps> = ({
                 <Calendar
                     mode="single"
                     selected={selectedDate}
-                    onSelect={onSelectDate}
+                    onSelect={handleSelect}
                     initialFocus
                     disabled={isDateDisabled}
+                    captionLayout="dropdown"
+                    fromMonth={addDays(today, -365 * 100)}
+                    toMonth={addDays(today, 365 * 10)}
                 />
             </PopoverContent>
         </Popover>

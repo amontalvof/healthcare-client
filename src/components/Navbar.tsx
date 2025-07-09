@@ -29,8 +29,8 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { twMerge } from 'tailwind-merge';
 import RenderIf from './RenderIf';
 import AuthDialog from './AuthDialog';
-import { useAuthCredentials } from '@/zustand/auth';
-import resolveUserInfo from '@/helpers/resolveUserInfo';
+import { useAuthCredentials } from '@/context/auth';
+import { resolveUserInfo } from '@/helpers';
 import { IUserAuth } from '@/types/AuthDialog';
 
 const Navbar = () => {
@@ -118,7 +118,7 @@ const Navbar = () => {
                                 <DropdownMenuSeparator />
                                 <RouterLink to="/profile">
                                     <DropdownMenuItem className="cursor-pointer">
-                                        My Profile
+                                        Patient Profile
                                     </DropdownMenuItem>
                                 </RouterLink>
                                 <RouterLink to="/billing">

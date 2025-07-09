@@ -39,7 +39,7 @@ import {
 import { TContentName } from '@/types/AuthDialog';
 import RenderIf from './RenderIf';
 import { authQueries } from '@/api/auth';
-import { useAuthCredentials, useAuthDialog } from '@/zustand/auth';
+import { useAuthCredentials, useAuthDialog } from '@/context/auth';
 
 const AuthDialog = () => {
     const { isAuthDialogOpen, setAuthDialogOpen } = useAuthDialog(
@@ -189,37 +189,37 @@ const AuthDialog = () => {
                                                                         index={
                                                                             0
                                                                         }
-                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-400 rounded-md focus:ring-2 focus:ring-primary"
                                                                     />
                                                                     <InputOTPSlot
                                                                         index={
                                                                             1
                                                                         }
-                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-400 rounded-md focus:ring-2 focus:ring-primary"
                                                                     />
                                                                     <InputOTPSlot
                                                                         index={
                                                                             2
                                                                         }
-                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-400 rounded-md focus:ring-2 focus:ring-primary"
                                                                     />
                                                                     <InputOTPSlot
                                                                         index={
                                                                             3
                                                                         }
-                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-400 rounded-md focus:ring-2 focus:ring-primary"
                                                                     />
                                                                     <InputOTPSlot
                                                                         index={
                                                                             4
                                                                         }
-                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-400 rounded-md focus:ring-2 focus:ring-primary"
                                                                     />
                                                                     <InputOTPSlot
                                                                         index={
                                                                             5
                                                                         }
-                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary"
+                                                                        className="w-11 h-11 sm:w-14 sm:h-14 text-xl mr-1.5 border border-gray-400 rounded-md focus:ring-2 focus:ring-primary"
                                                                     />
                                                                 </InputOTPGroup>
                                                             </InputOTP>
@@ -230,6 +230,7 @@ const AuthDialog = () => {
                                                                 <div className="relative">
                                                                     <Input
                                                                         {...field}
+                                                                        className="pr-10 border-gray-400"
                                                                         type={
                                                                             showPassword
                                                                                 ? 'text'
@@ -238,7 +239,6 @@ const AuthDialog = () => {
                                                                         placeholder={
                                                                             content.placeholder
                                                                         }
-                                                                        className="pr-10"
                                                                     />
                                                                     <button
                                                                         type="button"
@@ -265,6 +265,7 @@ const AuthDialog = () => {
                                                             ) : (
                                                                 <Input
                                                                     {...field}
+                                                                    className="border-gray-400"
                                                                     type={
                                                                         content.type
                                                                     }

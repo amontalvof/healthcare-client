@@ -43,7 +43,7 @@ const PickerTime = ({
                 onValueChange={onSelectTime}
                 disabled={disabled}
             >
-                <SelectTrigger className="w-full cursor-pointer bg-white">
+                <SelectTrigger className="w-full cursor-pointer bg-white border-gray-400">
                     <SelectValue
                         placeholder={
                             <p className="flex items-center gap-2 text-sm font-normal text-gray-500">

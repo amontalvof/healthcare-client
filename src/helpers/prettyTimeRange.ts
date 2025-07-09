@@ -1,6 +1,6 @@
 import { parse, format } from 'date-fns';
 
-export const prettyTimeRange = (workStart: string, workEnd: string): string => {
+const prettyTimeRange = (workStart: string, workEnd: string): string => {
     // parse accepts the incoming string, a format template, and a “base” date
     const startDate = parse(workStart, 'HH:mm:ss', new Date());
     const endDate = parse(workEnd, 'HH:mm:ss', new Date());
@@ -11,3 +11,5 @@ export const prettyTimeRange = (workStart: string, workEnd: string): string => {
 
     return `${prettyStart} – ${prettyEnd}`;
 };
+
+export default prettyTimeRange;

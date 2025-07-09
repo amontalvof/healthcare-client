@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import {
     Appointments,
     Appointment,
@@ -9,8 +10,19 @@ import {
 } from './pages';
 import { Footer, Navbar } from '@/components';
 import { PrivateRoute } from './router/PrivateRoute';
+import { useRedirect } from './context/redirect';
 
 const App = () => {
+    const navigate = useNavigate();
+    const { to, setTo } = useRedirect();
+
+    useEffect(() => {
+        if (to) {
+            navigate(to);
+            setTo(null);
+        }
+    }, [to, navigate, setTo]);
+
     return (
         <div>
             <Navbar />

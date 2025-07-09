@@ -1,8 +1,8 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { geocodeAddress } from '@/helpers/geocode';
 import { HospitalAddress } from '@/types/Doctor';
-import { formatAddress } from '@/helpers/formatAddress';
+import { formatAddress } from '@/helpers';
 import { useQueries } from '@tanstack/react-query';
+import { fetchWithoutToken } from '@/helpers/fetch';
 
 type Props = { hospitalsNames: string[]; hospitals: HospitalAddress[] };
 
@@ -17,7 +17,10 @@ export const HospitalMap: React.FC<Props> = ({ hospitals, hospitalsNames }) => {
                 h.postalCode,
                 h.country,
             ],
-            queryFn: () => geocodeAddress(h),
+            queryFn: () =>
+                fetchWithoutToken(
+                    `/geocode?street=${h.street}&city=${h.city}&state=${h.state}&postalCode=${h.postalCode}&country=${h.country}`
+                ),
             staleTime: Infinity,
             gcTime: Infinity,
             retry: 3,

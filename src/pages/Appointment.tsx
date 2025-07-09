@@ -4,23 +4,55 @@ import doctorFallback from '../assets/images/doctor.webp';
 import { Button } from '@/components/ui/button';
 import { PickerDate, PickerTime } from '@/components';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchWithoutToken } from '@/helpers/fetch';
-import { useQuery } from '@tanstack/react-query';
+import { fetchWithoutToken, fetchWithToken } from '@/helpers/fetch';
+import { useQueries } from '@tanstack/react-query';
 import { IDoctor } from '@/types/Doctor';
 import { HospitalMap } from '@/components/HospitalMap';
 import { useState } from 'react';
+import { useAuthCredentials } from '@/context/auth';
+import { resolveUserInfo } from '@/helpers';
+
+import { ConditionalTooltip } from '@/components/ConditionalTooltip';
+
+const resolveTooltipText = (
+    isSelectedDate: boolean,
+    isSelectedTime: boolean,
+    hasPatientProfile: boolean
+) => {
+    if (!isSelectedDate) {
+        return 'Please select a date first';
+    }
+    if (!isSelectedTime) {
+        return 'Please select a time first';
+    }
+    if (!hasPatientProfile) {
+        return 'Please complete your patient profile to book an appointment';
+    }
+    return '';
+};
 
 const Appointment = () => {
     const { docId } = useParams<{ docId: string }>();
     const navigate = useNavigate();
     const [selectedDate, setSelectedDate] = useState<Date>();
     const [selectedTime, setSelectedTime] = useState<string>('');
+    const accessToken = useAuthCredentials((state) => state.accessToken);
+    const user = resolveUserInfo(accessToken);
 
-    const { data: doctors = [] } = useQuery<IDoctor[]>({
-        queryKey: ['doctors'],
-        queryFn: () => fetchWithoutToken('/doctor'),
-        staleTime: Infinity,
-        gcTime: Infinity,
+    const [{ data: doctors = [], isLoading }, { data: patient }] = useQueries({
+        queries: [
+            {
+                queryKey: ['doctors'],
+                queryFn: () => fetchWithoutToken('/doctor'),
+                staleTime: Infinity,
+                gcTime: Infinity,
+            },
+            {
+                queryKey: ['patient', user?._id],
+                enabled: !!user?._id,
+                queryFn: () => fetchWithToken(`/patient/${user?._id}`),
+            },
+        ],
     });
 
     const handleSelectDate = (date?: Date) => {
@@ -29,7 +61,19 @@ const Appointment = () => {
 
     const handleSelectTime = (value: string) => setSelectedTime(value);
 
-    const docInfo = doctors.find((doc) => doc.id === Number(docId));
+    const docInfo: IDoctor = doctors.find(
+        (doc: IDoctor) => doc.id === Number(docId)
+    );
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh] bg-gray-50 px-4">
+                <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-8 max-w-sm text-center space-y-6">
+                    <p className="text-lg font-semibold">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (!docInfo) {
         return (
@@ -113,19 +157,37 @@ const Appointment = () => {
                     buttonClassName="w-full sm:w-[200px]"
                     disabledDates={[new Date(2025, 3, 29)]}
                 />
-                <PickerTime
-                    disabled={!selectedDate}
-                    selectedTime={selectedTime}
-                    onSelectTime={handleSelectTime}
-                    className="w-full sm:w-[200px]"
-                    disabledTimes={['12:00 PM']}
-                />
-                <Button
-                    className="w-full sm:w-[200px] cursor-pointer"
-                    disabled={!selectedDate || !selectedTime}
+                <ConditionalTooltip
+                    enabled={!selectedDate}
+                    content={<span>Please select a date first</span>}
                 >
-                    Book Appointment
-                </Button>
+                    <PickerTime
+                        disabled={!selectedDate}
+                        selectedTime={selectedTime}
+                        onSelectTime={handleSelectTime}
+                        className="w-full sm:w-[200px]"
+                        disabledTimes={['12:00 PM']}
+                    />
+                </ConditionalTooltip>
+                <ConditionalTooltip
+                    enabled={!selectedDate || !selectedTime || !patient}
+                    content={
+                        <span>
+                            {resolveTooltipText(
+                                !!selectedDate,
+                                !!selectedTime,
+                                !!patient
+                            )}
+                        </span>
+                    }
+                >
+                    <Button
+                        className="w-full sm:w-[200px] cursor-pointer"
+                        disabled={!selectedDate || !selectedTime || !patient}
+                    >
+                        Book Appointment
+                    </Button>
+                </ConditionalTooltip>
             </div>
             <div className="mt-10 h-[500px]">
                 <HospitalMap

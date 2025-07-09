@@ -33,7 +33,9 @@ const dialogContentMap = {
     [AuthTypes.VERIFY_ACCOUNT]: [verificationCode],
 };
 
-const resolveAuthDialogContent = (type: AuthTypes) => {
+const resolveAuthDialogContent = (
+    type: Exclude<AuthTypes, AuthTypes.RESEND_CODE>
+) => {
     return dialogContentMap[type] || dialogContentMap[AuthTypes.LOGIN];
 };
 

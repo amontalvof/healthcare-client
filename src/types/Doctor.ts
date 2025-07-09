@@ -34,7 +34,7 @@ export interface HospitalAddress {
     city: string;
     state: string;
     postalCode: string;
-    country: null;
+    country: string;
     createdAt: Date;
     updatedAt: Date;
     deletedAt: null;

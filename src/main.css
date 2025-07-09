@@ -5,7 +5,7 @@
 
 :root {
     --radius: 0.625rem;
-    --background: oklch(0.98 0 0);
+    --background: oklch(0.96 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
@@ -121,4 +121,27 @@ body {
     body {
         @apply bg-background text-foreground;
     }
+}
+
+.rdp {
+    @apply p-3;
+}
+.rdp-months {
+    @apply flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0;
+}
+.rdp-month {
+    @apply space-y-4;
+}
+.rdp-caption {
+    @apply flex justify-center items-center pt-1 relative;
+}
+.rdp-caption_dropdowns {
+    @apply flex justify-center gap-10 rounded-md  bg-popover p-1 text-sm cursor-pointer;
+}
+.rdp-nav_button_previous,
+.rdp-nav_button_next {
+    @apply flex h-7 w-7 items-center justify-center rounded-md border bg-popover hover:bg-accent/10;
+}
+.rdp-nav_select {
+    @apply px-2 py-1 rounded-md border bg-transparent text-left outline-none;
 }

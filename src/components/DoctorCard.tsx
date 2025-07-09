@@ -12,8 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Clock3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthDialog, useAuthCredentials } from '@/zustand/auth';
-import resolveUserInfo from '@/helpers/resolveUserInfo';
+import { useAuthDialog, useAuthCredentials } from '@/context/auth';
+import { resolveUserInfo } from '@/helpers';
 
 interface DoctorCardProps {
     id: number;

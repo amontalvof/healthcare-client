@@ -2,7 +2,7 @@ import { DoctorCard } from '@/components';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { fetchWithoutToken } from '@/helpers/fetch';
-import { prettyTimeRange } from '@/helpers/prettyTimeRange';
+import { prettyTimeRange } from '@/helpers';
 import { IDoctor, IDoctorSpecialty } from '@/types/Doctor';
 import { useQueries } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -53,23 +53,28 @@ const Doctors = () => {
                             <RadioGroupItem
                                 value="all"
                                 id="all"
-                                className="border border-gray-500"
+                                className="border border-gray-400 cursor-pointer"
                             />
-                            <Label htmlFor="all">All Doctors</Label>
+                            <Label htmlFor="all" className="cursor-pointer">
+                                All Doctors
+                            </Label>
                         </div>
                         {specialtyData.map((item: IDoctorSpecialty) => {
                             const keyIndex = `${item.name}-${item.id}`;
                             return (
                                 <div
-                                    className="flex items-center space-x-2"
+                                    className="flex items-center space-x-2 "
                                     key={keyIndex}
                                 >
                                     <RadioGroupItem
                                         value={item.route}
                                         id={item.route}
-                                        className="border border-gray-500"
+                                        className="border border-gray-400 cursor-pointer"
                                     />
-                                    <Label htmlFor={item.route}>
+                                    <Label
+                                        htmlFor={item.route}
+                                        className="cursor-pointer"
+                                    >
                                         {item.name}
                                     </Label>
                                 </div>

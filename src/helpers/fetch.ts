@@ -1,4 +1,7 @@
+import { useAuthCredentials } from '@/context/auth';
+import { useRedirect } from '@/context/redirect';
 import { ApiError } from '@/types/Api';
+import { toast } from 'sonner';
 
 export const fetchWithoutToken = async <T>(
     endpoint: string,
@@ -31,13 +34,13 @@ export const fetchWithToken = async <T>(
     method = 'GET'
 ) => {
     const url = `${import.meta.env.VITE_BACKEND_API_URL}${endpoint}`;
-    const token = localStorage.getItem('token') ?? '';
+    const { accessToken, clearCredentials } = useAuthCredentials.getState();
     let res;
     if (method === 'GET') {
         res = await fetch(url, {
             method,
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${accessToken}`,
             },
         });
     } else {
@@ -45,12 +48,18 @@ export const fetchWithToken = async <T>(
             method,
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${accessToken}`,
             },
             body: JSON.stringify(data),
         });
     }
-    const payload = (await res.json()) as unknown as ApiError;
+    const payload = await res.json();
+    if (res.status === 401) {
+        clearCredentials();
+        toast('Session expired. Please log in again.');
+        useRedirect.getState().setTo('/');
+        throw new Error('Unauthorized');
+    }
     if (!res.ok) {
         throw new Error(
             (payload as unknown as ApiError).message || `Error ${res.status}`
