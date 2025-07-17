@@ -10,7 +10,7 @@ import { useAuthCredentials } from '@/context/auth';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { fetchWithToken } from '@/helpers/fetch';
 import { useForm } from 'react-hook-form';
-import { z, ZodTypeAny } from 'zod';
+import { z, ZodTypeAny, ZodIssueCode } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
     Form,
@@ -29,7 +29,6 @@ import {
     phoneNumberValidator,
     resolveUserInfo,
 } from '@/helpers';
-import { Calendar } from '@/components/ui/calendar';
 import {
     Select,
     SelectContent,
@@ -44,7 +43,37 @@ const formSchema = z.object({
     fullName: z.string().min(1, 'Name is required'),
     email: z.string().email('Invalid email address'),
     userId: z.string().min(1, 'User ID is required'),
-    image: z.any().optional(), // or z.union([z.string(), z.instanceof(File)]).optional()
+    image: z
+        .any()
+        .optional()
+        .transform((val: FileList, ctx) => {
+            // If no file selected or it's already a URL string, pass through
+            if (!val || !val.length || typeof val === 'string') {
+                return undefined;
+            }
+
+            const file = val[0] as File;
+            const maxSize = 1024 * 1024; // 1MB
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
+            if (!allowedTypes.includes(file.type)) {
+                ctx.addIssue({
+                    code: ZodIssueCode.custom,
+                    message: 'Only JPG, JPEG or PNG files are allowed',
+                });
+                return undefined;
+            }
+
+            if (file.size > maxSize) {
+                ctx.addIssue({
+                    code: ZodIssueCode.custom,
+                    message: 'Max file size is 1MB',
+                });
+                return undefined;
+            }
+
+            return file;
+        }),
     countryCode: z.string().min(1, 'Country Code is required'),
     phone: z.string().transform(phoneNumberValidator),
     insuranceId: z.number({
@@ -75,11 +104,16 @@ const Profile = () => {
     const accessToken = useAuthCredentials((state) => state.accessToken);
     const user = resolveUserInfo(accessToken);
     const [isEditing, setIsEditing] = useState(false);
+    const [imagePreview, setImagePreview] = useState<string | undefined>();
 
     const { data: patientData } = useQuery({
         queryKey: ['patient', user?._id],
         enabled: !!user?._id,
-        queryFn: () => fetchWithToken(`/patient/${user?._id}`),
+        queryFn: async () => {
+            const result = await fetchWithToken(`/patient/${user?._id}`);
+            setImagePreview(result?.image);
+            return result;
+        },
     });
 
     const { mutate: updateMutate } = useMutation({
@@ -136,17 +170,25 @@ const Profile = () => {
         },
     });
 
+    const { control, register, reset, handleSubmit, formState, watch } = form;
+    const { isDirty } = formState;
+    const watchedImage = watch('image');
+
     const handleEdit = () => {
-        form.reset();
+        reset();
         setIsEditing(!isEditing);
     };
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsEditing(false);
+        const { image, ...rest } = values;
+        if (!isDirty) {
+            return;
+        }
         if (patientData?.id) {
-            updateMutate(values);
+            updateMutate(rest);
         } else {
-            createMutate(values);
+            createMutate(rest);
         }
 
         // 2) If there’s a new File in values.image, upload it first
@@ -161,10 +203,17 @@ const Profile = () => {
     };
 
     useEffect(() => {
+        if (watchedImage instanceof FileList && watchedImage.length > 0) {
+            const file = watchedImage[0];
+            setImagePreview(URL.createObjectURL(file));
+        }
+    }, [watchedImage]);
+
+    useEffect(() => {
         if (!patientData) {
             return;
         }
-        form.reset({
+        reset({
             fullName: patientData.fullName ?? user?.fullName,
             email: patientData.email ?? user?.email,
             userId: patientData.userId ?? user?._id,
@@ -193,11 +242,11 @@ const Profile = () => {
         <Card className="w-full max-w-md mx-auto">
             <CardContent className="space-y-6 my-2.5">
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <form onSubmit={handleSubmit(onSubmit)}>
                         <div className="relative w-24 h-24 mx-auto">
                             <Avatar className="w-24 h-24">
                                 <AvatarImage
-                                    src={'patient.image'}
+                                    src={imagePreview || ''}
                                     className={
                                         isEditing ? 'filter blur-sm' : ''
                                     }
@@ -217,17 +266,23 @@ const Profile = () => {
                                     <input
                                         id="image-upload"
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/jpeg,image/png,image/jpg"
                                         className="sr-only"
-                                        {...form.register('image')}
+                                        {...register('image')}
                                     />
                                 </>
                             )}
                         </div>
+                        <div className="text-center">
+                            <p className="text-destructive text-sm mt-1">
+                                {(form?.formState?.errors?.image
+                                    ?.message as string) ?? null}
+                            </p>
+                        </div>
                         <div className="grid gap-5">
                             <div className="flex flex-col">
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="fullName"
                                     render={({ field }) => (
                                         <FormItem>
@@ -247,7 +302,7 @@ const Profile = () => {
                             </div>
                             <div className="flex flex-col">
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
@@ -267,7 +322,7 @@ const Profile = () => {
                             </div>
                             <div className="flex flex-row items-start justify-start">
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="countryCode"
                                     render={({ field }) => (
                                         <FormItem>
@@ -286,7 +341,7 @@ const Profile = () => {
                                     )}
                                 />
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="phone"
                                     render={({ field }) => {
                                         return (
@@ -321,7 +376,7 @@ const Profile = () => {
                             </div>
                             <div className="flex flex-row items-start justify-between">
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="sex"
                                     render={({ field }) => (
                                         <FormItem>
@@ -373,7 +428,7 @@ const Profile = () => {
                                     )}
                                 />
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="birthDate"
                                     render={({ field }) => (
                                         <FormItem>
@@ -403,7 +458,7 @@ const Profile = () => {
                                                     }}
                                                     buttonClassName="w-full sm:w-[200px]"
                                                     error={
-                                                        form.formState.errors
+                                                        formState.errors
                                                             .birthDate?.message
                                                     }
                                                     disabled={!isEditing}
@@ -416,7 +471,7 @@ const Profile = () => {
                             </div>
                             <div className="flex flex-col">
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="insuranceId"
                                     render={({ field }) => (
                                         <FormItem>
@@ -442,8 +497,7 @@ const Profile = () => {
                                                     <SelectTrigger
                                                         className={cn(
                                                             'w-full border-gray-400 cursor-pointer',
-                                                            form.formState
-                                                                .errors
+                                                            formState.errors
                                                                 .insuranceId
                                                                 ?.message &&
                                                                 'border-destructive focus-visible:ring-destructive'
@@ -496,7 +550,7 @@ const Profile = () => {
                             </div>
                             <div className="flex flex-col">
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="address.street"
                                     render={({ field }) => (
                                         <FormItem>
@@ -520,7 +574,7 @@ const Profile = () => {
                             </div>
                             <div className="flex flex-row gap-4 items-start justify-start">
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="address.city"
                                     render={({ field }) => (
                                         <FormItem className="w-full">
@@ -538,9 +592,8 @@ const Profile = () => {
                                                     <SelectTrigger
                                                         className={cn(
                                                             'w-full border-gray-400 cursor-pointer',
-                                                            form.formState
-                                                                .errors.address
-                                                                ?.city
+                                                            formState.errors
+                                                                .address?.city
                                                                 ?.message &&
                                                                 'border-destructive focus-visible:ring-destructive'
                                                         )}
@@ -567,7 +620,7 @@ const Profile = () => {
                                     )}
                                 />
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="address.state"
                                     render={({ field }) => (
                                         <FormItem className="w-full">
@@ -585,9 +638,8 @@ const Profile = () => {
                                                     <SelectTrigger
                                                         className={cn(
                                                             'w-full border-gray-400 cursor-pointer',
-                                                            form.formState
-                                                                .errors.address
-                                                                ?.state
+                                                            formState.errors
+                                                                .address?.state
                                                                 ?.message &&
                                                                 'border-destructive focus-visible:ring-destructive'
                                                         )}
@@ -622,7 +674,7 @@ const Profile = () => {
                             </div>
                             <div className="flex flex-row gap-4 items-start justify-start">
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="address.postalCode"
                                     render={({ field }) => (
                                         <FormItem className="w-full">
@@ -644,7 +696,7 @@ const Profile = () => {
                                     )}
                                 />
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="address.country"
                                     render={({ field }) => (
                                         <FormItem className="w-full">
@@ -675,7 +727,7 @@ const Profile = () => {
                             </div>
                             <div className="flex flex-wrap flex-row gap-4 items-start justify-start">
                                 <FormField
-                                    control={form.control}
+                                    control={control}
                                     name="emergencyContact.fullName"
                                     render={({ field }) => (
                                         <FormItem className="w-full sm:w-42">
@@ -698,7 +750,7 @@ const Profile = () => {
                                 />
                                 <div className="flex flex-row items-start justify-start w-full sm:w-auto">
                                     <FormField
-                                        control={form.control}
+                                        control={control}
                                         name="emergencyContact.countryCode"
                                         render={({ field }) => (
                                             <FormItem>
@@ -720,7 +772,7 @@ const Profile = () => {
                                         )}
                                     />
                                     <FormField
-                                        control={form.control}
+                                        control={control}
                                         name="emergencyContact.phone"
                                         render={({ field }) => (
                                             <FormItem className="w-full sm:w-39">
