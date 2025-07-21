@@ -3,22 +3,30 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface AuthState {
     accessToken: string | null;
+    imagePreview?: string;
+    setImagePreview: (url: string | undefined) => void;
     setCredentials: (token: string) => void;
     clearCredentials: () => void;
 }
 
 export const useAuthCredentials = create<AuthState>()(
-    persist(
+    persist<AuthState>(
         (set) => ({
             accessToken: null,
+            imagePreview: undefined,
+            setImagePreview: (url: string | undefined) =>
+                set({ imagePreview: url }),
             setCredentials: (token: string) => set({ accessToken: token }),
             clearCredentials: () => set({ accessToken: null }),
         }),
         {
             name: 'auth-storage',
             storage: createJSONStorage(() => localStorage),
-            // <-- whitelist only accessToken for persistence
-            partialize: (state) => ({ accessToken: state.accessToken }),
+            //@ts-ignore
+            partialize: (state) => ({
+                accessToken: state.accessToken,
+                imagePreview: state.imagePreview,
+            }),
         }
     )
 );

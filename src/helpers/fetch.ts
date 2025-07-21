@@ -44,14 +44,17 @@ export const fetchWithToken = async <T>(
             },
         });
     } else {
-        res = await fetch(url, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify(data),
-        });
+        const headers: Record<string, string> = {
+            Authorization: `Bearer ${accessToken}`,
+        };
+        const options: RequestInit = { method, headers };
+        if (data instanceof FormData) {
+            options.body = data;
+        } else {
+            headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(data);
+        }
+        res = await fetch(url, options);
     }
     const payload = await res.json();
     if (res.status === 401) {

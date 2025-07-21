@@ -104,14 +104,16 @@ const Profile = () => {
     const accessToken = useAuthCredentials((state) => state.accessToken);
     const user = resolveUserInfo(accessToken);
     const [isEditing, setIsEditing] = useState(false);
-    const [imagePreview, setImagePreview] = useState<string | undefined>();
+    const { imagePreview, setImagePreview } = useAuthCredentials(
+        (state) => state
+    );
 
     const { data: patientData } = useQuery({
         queryKey: ['patient', user?._id],
         enabled: !!user?._id,
         queryFn: async () => {
             const result = await fetchWithToken(`/patient/${user?._id}`);
-            setImagePreview(result?.image);
+            setImagePreview(result?.imageUrl);
             return result;
         },
     });
@@ -122,8 +124,11 @@ const Profile = () => {
             const { image, ...rest } = data;
             return fetchWithToken(`/patient/${patientData?.id}`, rest, 'PUT');
         },
-        onSuccess: (result, variables) => {
-            console.log('updatePatient', { result, variables });
+        onSuccess: (_result, variables) => {
+            const { image } = variables;
+            if (image instanceof File) {
+                uploadImageMutate({ image });
+            }
         },
     });
 
@@ -133,8 +138,25 @@ const Profile = () => {
             const { image, ...rest } = data;
             return fetchWithToken(`/patient`, rest, 'POST');
         },
-        onSuccess: (result, variables) => {
-            console.log('createPatient', { result, variables });
+        onSuccess: (_result, variables) => {
+            const { image } = variables;
+            if (image instanceof File) {
+                uploadImageMutate({ image });
+            }
+        },
+    });
+
+    const { mutate: uploadImageMutate } = useMutation({
+        mutationKey: ['uploadPatientImage'],
+        mutationFn: async ({ image }: { image: File }) => {
+            const formData = new FormData();
+            formData.append('profileImage', image);
+            return fetchWithToken(`/patient/image`, formData, 'POST');
+        },
+        onSuccess: (result) => {
+            if (result.secureUrl) {
+                setImagePreview(result.secureUrl);
+            }
         },
     });
 
@@ -177,29 +199,21 @@ const Profile = () => {
     const handleEdit = () => {
         reset();
         setIsEditing(!isEditing);
+        if (isEditing) {
+            setImagePreview(patientData?.imageUrl || user?.imageUrl);
+        }
     };
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsEditing(false);
-        const { image, ...rest } = values;
         if (!isDirty) {
             return;
         }
         if (patientData?.id) {
-            updateMutate(rest);
+            updateMutate(values);
         } else {
-            createMutate(rest);
+            createMutate(values);
         }
-
-        // 2) If there’s a new File in values.image, upload it first
-        // if (values.image instanceof File) {
-        //     const formData = new FormData();
-        //     formData.append('image', values.image);
-        //     await fetchWithToken(`/patient/${values.userId}/avatar`, {
-        //         method: 'POST',
-        //         body: formData,
-        //     });
-        // }
     };
 
     useEffect(() => {
@@ -236,6 +250,7 @@ const Profile = () => {
                 phone: patientData.emergencyContact?.phone ?? '',
             },
         });
+        setImagePreview(patientData.imageUrl);
     }, [patientData]);
 
     return (
@@ -246,7 +261,7 @@ const Profile = () => {
                         <div className="relative w-24 h-24 mx-auto">
                             <Avatar className="w-24 h-24">
                                 <AvatarImage
-                                    src={imagePreview || ''}
+                                    src={imagePreview}
                                     className={
                                         isEditing ? 'filter blur-sm' : ''
                                     }

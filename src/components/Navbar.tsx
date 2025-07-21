@@ -35,7 +35,7 @@ import { IUserAuth } from '@/types/AuthDialog';
 
 const Navbar = () => {
     const [open, setOpen] = useState(false);
-    const { accessToken, clearCredentials } = useAuthCredentials(
+    const { accessToken, clearCredentials, imagePreview } = useAuthCredentials(
         (state) => state
     );
     const user = resolveUserInfo(accessToken);
@@ -98,7 +98,7 @@ const Navbar = () => {
                                 <button className="flex items-center focus:outline-none">
                                     <Avatar className="h-8 w-8 cursor-pointer mx-5 sm:mx-0">
                                         <AvatarImage
-                                            src={user?.image}
+                                            src={imagePreview || user?.imageUrl}
                                             alt={user?.fullName}
                                         />
                                         <AvatarFallback>

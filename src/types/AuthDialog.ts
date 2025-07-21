@@ -4,6 +4,6 @@ export interface IUserAuth {
     _id: string;
     fullName?: string;
     email?: string;
-    image?: string;
+    imageUrl?: string;
     roles?: string[];
 }

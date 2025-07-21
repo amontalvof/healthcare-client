@@ -9,8 +9,9 @@ const resolveUserInfo = (token: string | null) => {
     if (!token) {
         return null;
     }
-    const { _id, fullName, image, email, roles } = jwtDecode<JWTPayload>(token);
-    return { _id, fullName, image, email, roles };
+    const { _id, fullName, imageUrl, email, roles } =
+        jwtDecode<JWTPayload>(token);
+    return { _id, fullName, imageUrl, email, roles };
 };
 
 export default resolveUserInfo;
