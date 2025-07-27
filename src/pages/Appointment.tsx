@@ -1,18 +1,21 @@
 import { Info, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import doctorFallback from '../assets/images/doctor.webp';
 import { Button } from '@/components/ui/button';
 import { PickerDate, PickerTime } from '@/components';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchWithoutToken, fetchWithToken } from '@/helpers/fetch';
-import { useQueries } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import { IDoctor } from '@/types/Doctor';
 import { HospitalMap } from '@/components/HospitalMap';
 import { useState } from 'react';
 import { useAuthCredentials } from '@/context/auth';
 import { resolveUserInfo } from '@/helpers';
-
 import { ConditionalTooltip } from '@/components/ConditionalTooltip';
+import { Textarea } from '@/components/ui/textarea';
+import formatStartAndEndTime from '@/helpers/formatStartAndEndTime';
+import { formatDate } from '@/helpers/formatDate';
 
 const resolveTooltipText = (
     isSelectedDate: boolean,
@@ -36,8 +39,42 @@ const Appointment = () => {
     const navigate = useNavigate();
     const [selectedDate, setSelectedDate] = useState<Date>();
     const [selectedTime, setSelectedTime] = useState<string>('');
+    const [reason, setReason] = useState<string>('');
     const accessToken = useAuthCredentials((state) => state.accessToken);
     const user = resolveUserInfo(accessToken);
+
+    const { mutate } = useMutation({
+        mutationKey: ['bookAppointment'],
+        mutationFn: async (appointmentData: {
+            doctorId: number;
+            patientId: number;
+            date: string;
+            status: string;
+            startTime: string;
+            endTime: string;
+            reason: string;
+        }) => {
+            const response = await fetchWithToken(
+                '/appointment',
+                appointmentData,
+                'POST'
+            );
+            return response;
+        },
+        onSuccess: () => {
+            setSelectedDate(undefined);
+            setSelectedTime('');
+            setReason('');
+            navigate('/appointments');
+            toast.success('Appointment booked successfully!');
+        },
+        onError: () => {
+            setSelectedDate(undefined);
+            setSelectedTime('');
+            setReason('');
+            toast.error('An error occurred while booking the appointment.');
+        },
+    });
 
     const [{ data: doctors = [], isLoading }, { data: patient }] = useQueries({
         queries: [
@@ -55,11 +92,45 @@ const Appointment = () => {
         ],
     });
 
+    const { data: bookedHours = [], isLoading: isLoadingBookedHours } =
+        useQuery({
+            queryKey: ['booked-hours', docId, selectedDate],
+            queryFn: () =>
+                fetchWithToken(
+                    `/appointment/booked-hours/${docId}?date=${formatDate(
+                        selectedDate
+                    )}`
+                ),
+            enabled: !!docId && !!selectedDate,
+            staleTime: Infinity,
+            gcTime: Infinity,
+        });
+
+    const disabledTimes = bookedHours?.map(
+        (item: { startTime: string }) => item.startTime
+    );
+
+    console.log(disabledTimes);
+
     const handleSelectDate = (date?: Date) => {
         setSelectedDate(date);
     };
 
     const handleSelectTime = (value: string) => setSelectedTime(value);
+
+    const handleBookAppointment = () => {
+        const { startTime, endTime } = formatStartAndEndTime(selectedTime);
+        const date = formatDate(selectedDate);
+        mutate({
+            doctorId: Number(docId),
+            patientId: Number(patient.id),
+            status: 'SCHEDULED',
+            date,
+            startTime,
+            endTime,
+            reason,
+        });
+    };
 
     const docInfo: IDoctor = doctors.find(
         (doc: IDoctor) => doc.id === Number(docId)
@@ -148,27 +219,36 @@ const Appointment = () => {
                     </p>
                 </div>
             </div>
-            <div className="sm:ml-74 sm:pl-4 mt-10 flex flex-wrap gap-4">
+            <div className="mt-10 flex flex-wrap gap-4">
                 <PickerDate
                     selectedDate={selectedDate}
                     onSelectDate={handleSelectDate}
                     disableWeekends={true}
                     amountOfDaysToEnable={21}
-                    buttonClassName="w-full sm:w-[200px]"
+                    buttonClassName="w-full sm:w-[300px]"
                     disabledDates={[new Date(2025, 3, 29)]}
                 />
                 <ConditionalTooltip
                     enabled={!selectedDate}
                     content={<span>Please select a date first</span>}
+                    className="w-full sm:w-[300px]"
                 >
                     <PickerTime
-                        disabled={!selectedDate}
+                        disabled={!selectedDate || isLoadingBookedHours}
                         selectedTime={selectedTime}
                         onSelectTime={handleSelectTime}
-                        className="w-full sm:w-[200px]"
-                        disabledTimes={['12:00 PM']}
+                        disabledTimes={['12:00:00', ...disabledTimes]}
+                        className="w-full sm:w-[300px]"
                     />
                 </ConditionalTooltip>
+                <Textarea
+                    className="w-full sm:w-[35%] bg-white border-gray-400 h-9"
+                    placeholder="Add reason (optional)"
+                    rows={1}
+                    style={{ minHeight: '36px', maxHeight: '120px' }}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                />
                 <ConditionalTooltip
                     enabled={!selectedDate || !selectedTime || !patient}
                     content={
@@ -180,10 +260,12 @@ const Appointment = () => {
                             )}
                         </span>
                     }
+                    className="w-full sm:w-[200px]"
                 >
                     <Button
-                        className="w-full sm:w-[200px] cursor-pointer"
+                        className={'w-full sm:w-[200px] cursor-pointer'}
                         disabled={!selectedDate || !selectedTime || !patient}
+                        onClick={handleBookAppointment}
                     >
                         Book Appointment
                     </Button>

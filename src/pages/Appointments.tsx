@@ -1,6 +1,7 @@
 import {
     ColumnDef,
     ColumnFiltersState,
+    PaginationState,
     SortingState,
     VisibilityState,
     flexRender,
@@ -13,13 +14,11 @@ import {
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -33,83 +32,29 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { fetchWithToken } from '@/helpers/fetch';
+import { format, parse, parseISO } from 'date-fns';
 
-const data: Payment[] = [
-    {
-        id: 'm5gr84i9',
-        amount: 316,
-        status: 'success',
-        email: 'ken99@example.com',
-    },
-    {
-        id: '3u1reuv4',
-        amount: 242,
-        status: 'success',
-        email: 'Abe45@example.com',
-    },
-    {
-        id: 'derv1ws0',
-        amount: 837,
-        status: 'processing',
-        email: 'Monserrat44@example.com',
-    },
-    {
-        id: '5kma53ae',
-        amount: 874,
-        status: 'success',
-        email: 'Silas22@example.com',
-    },
-    {
-        id: 'bhqecj4p',
-        amount: 721,
-        status: 'failed',
-        email: 'carmella@example.com',
-    },
-];
-
-type Payment = {
-    id: string;
-    amount: number;
-    status: 'pending' | 'processing' | 'success' | 'failed';
-    email: string;
+type AppointmentData = {
+    id: number;
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+    doctor: {
+        fullName: string;
+    };
 };
 
-const columns: ColumnDef<Payment>[] = [
+const columns: ColumnDef<AppointmentData>[] = [
     {
-        id: 'select',
-        header: ({ table }) => (
-            <Checkbox
-                className="border border-gray-500 cursor-pointer"
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && 'indeterminate')
-                }
-                onCheckedChange={(value) =>
-                    table.toggleAllPageRowsSelected(!!value)
-                }
-                aria-label="Select all"
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                className="border border-gray-500 cursor-pointer"
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-            />
-        ),
-        enableSorting: false,
+        accessorKey: 'id',
+        cell: ({ row }) => row.getValue<number>('id'),
         enableHiding: false,
     },
     {
-        accessorKey: 'status',
-        header: 'Status',
-        cell: ({ row }) => (
-            <div className="capitalize">{row.getValue('status')}</div>
-        ),
-    },
-    {
-        accessorKey: 'email',
+        accessorKey: 'date',
         header: ({ column }) => {
             return (
                 <Button
@@ -118,35 +63,100 @@ const columns: ColumnDef<Payment>[] = [
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
                 >
-                    Email
+                    Date
                     <ArrowUpDown />
                 </Button>
             );
         },
-        cell: ({ row }) => (
-            <div className="lowercase">{row.getValue('email')}</div>
-        ),
-    },
-    {
-        accessorKey: 'amount',
-        header: () => <div className="text-right">Amount</div>,
         cell: ({ row }) => {
-            const amount = parseFloat(row.getValue('amount'));
-
-            // Format the amount as a dollar amount
-            const formatted = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-            }).format(amount);
-
-            return <div className="text-right font-medium">{formatted}</div>;
+            const raw = row.getValue<string>('date');
+            const date = parseISO(raw);
+            return (
+                <div className="pl-3 capitalize">
+                    {format(date, 'EEE dd MMM')}
+                </div>
+            );
         },
     },
     {
+        accessorKey: 'startTime',
+        header: 'Start time',
+        cell: ({ row }) => {
+            const raw = row.getValue<string>('startTime');
+            const date = parse(raw, 'HH:mm:ss', new Date());
+            return <div className="lowercase">{format(date, 'hh:mm a')}</div>;
+        },
+    },
+    {
+        accessorKey: 'endTime',
+        header: 'End time',
+        cell: ({ row }) => {
+            const raw = row.getValue<string>('endTime');
+            const date = parse(raw, 'HH:mm:ss', new Date());
+            return <div className="lowercase">{format(date, 'hh:mm a')}</div>;
+        },
+    },
+    {
+        id: 'doctor',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                >
+                    Doctor
+                    <ArrowUpDown />
+                </Button>
+            );
+        },
+        accessorFn: (row) => row.doctor.fullName,
+        cell: ({ getValue }) => {
+            return <div className="pl-3 capitalize">{getValue<string>()}</div>;
+        },
+    },
+    {
+        accessorKey: 'status',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                >
+                    Status
+                    <ArrowUpDown />
+                </Button>
+            );
+        },
+        cell: ({ row }) => {
+            const status = row.getValue<string>('status');
+            return (
+                <div
+                    className={`pl-3 capitalize ${
+                        status === 'COMPLETED'
+                            ? 'text-green-600'
+                            : status === 'CANCELLED'
+                            ? 'text-red-600'
+                            : 'text-yellow-600'
+                    }`}
+                >
+                    {status}
+                </div>
+            );
+        },
+    },
+
+    {
         id: 'actions',
+        header: 'Actions',
         enableHiding: false,
         cell: ({ row }) => {
-            const payment = row.original;
+            const status = row.getValue<string>('status');
+            const disableOpenMenu = status === 'COMPLETED';
+            const disableCancel = status === 'CANCELLED';
 
             return (
                 <DropdownMenu>
@@ -154,24 +164,26 @@ const columns: ColumnDef<Payment>[] = [
                         <Button
                             variant="ghost"
                             className="h-8 w-8 p-0 cursor-pointer"
+                            disabled={disableOpenMenu}
                         >
                             <span className="sr-only">Open menu</span>
                             <MoreHorizontal />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() =>
-                                navigator.clipboard.writeText(payment.id)
-                            }
+                            className="cursor-pointer"
+                            onClick={() => {}}
                         >
-                            Copy payment ID
+                            Pay Appointment Fee
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>
-                            View payment details
+                        <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={() => {}}
+                            disabled={disableCancel}
+                        >
+                            Cancel Appointment
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -181,52 +193,97 @@ const columns: ColumnDef<Payment>[] = [
 ];
 
 const Appointments = () => {
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageIndex: 0,
+        pageSize: 10,
+    });
+    const [globalFilter, setGlobalFilter] = useState<string>('');
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-        {}
-    );
-    const [rowSelection, setRowSelection] = useState({});
+    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+        id: false,
+    });
+
+    const { data: appointmentsData, isLoading } = useQuery({
+        queryKey: [
+            'appointments',
+            pagination.pageIndex + 1,
+            pagination.pageSize,
+        ],
+        queryFn: () =>
+            fetchWithToken(
+                `/appointment?page=${pagination.pageIndex + 1}&limit=${
+                    pagination.pageSize
+                }`
+            ),
+        placeholderData: keepPreviousData,
+    });
 
     const table = useReactTable({
-        data,
+        data: appointmentsData?.data ?? [],
         columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
+        manualPagination: true,
+        pageCount: appointmentsData?.totalPages ?? 0,
         state: {
+            pagination,
+            globalFilter,
             sorting,
             columnFilters,
             columnVisibility,
-            rowSelection,
         },
+        globalFilterFn: (row, _columnId, filterValue) => {
+            const search = String(filterValue).toLowerCase();
+            return row.getVisibleCells().some((cell) => {
+                const id = cell.column.id;
+                let text = '';
+
+                // for "date", format ISO → "Sat 26 Jul"
+                if (id === 'date') {
+                    const raw = row.getValue<string>('date');
+                    text = format(parseISO(raw), 'EEE dd MMM').toLowerCase();
+                }
+                // for times, format "HH:mm:ss" → "01:00 PM"
+                else if (id === 'startTime' || id === 'endTime') {
+                    const raw = row.getValue<string>(id);
+                    text = format(
+                        parse(raw, 'HH:mm:ss', new Date()),
+                        'hh:mm a'
+                    ).toLowerCase();
+                }
+                // everything else use the raw cell value
+                else {
+                    text = String(cell.getValue()).toLowerCase();
+                }
+
+                return text.includes(search);
+            });
+        },
+        onPaginationChange: setPagination,
+        onGlobalFilterChange: setGlobalFilter,
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        onColumnVisibilityChange: setColumnVisibility,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
     });
 
     return (
         <div className="w-full">
-            <div className="flex items-center py-4">
+            <div className="flex items-center gap-2 py-4">
                 <Input
-                    placeholder="Filter emails..."
-                    value={
-                        (table
-                            .getColumn('email')
-                            ?.getFilterValue() as string) ?? ''
-                    }
-                    onChange={(event) =>
-                        table
-                            .getColumn('email')
-                            ?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm border border-gray-400"
+                    placeholder="Filter appointments…"
+                    value={globalFilter}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                    className="max-w-sm border border-gray-400 bg-white"
                 />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
+                        <Button
+                            variant="outline"
+                            className="ml-auto bg-white border-gray-400"
+                        >
                             Columns <ChevronDown />
                         </Button>
                     </DropdownMenuTrigger>
@@ -309,15 +366,21 @@ const Appointments = () => {
             </div>
             <div className="flex items-center justify-end space-x-2 py-4">
                 <div className="flex-1 text-sm text-muted-foreground">
-                    {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                    {table.getFilteredRowModel().rows.length} row(s) selected.
+                    {appointmentsData
+                        ? `Showing ${
+                              pagination.pageIndex * pagination.pageSize + 1
+                          }–${
+                              pagination.pageIndex * pagination.pageSize +
+                              table.getRowModel().rows.length
+                          } of ${appointmentsData.total} appointments`
+                        : 'Loading...'}
                 </div>
                 <div className="space-x-2">
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
+                        disabled={!table.getCanPreviousPage() || isLoading}
                     >
                         Previous
                     </Button>
@@ -325,7 +388,7 @@ const Appointments = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
+                        disabled={!table.getCanNextPage() || isLoading}
                     >
                         Next
                     </Button>

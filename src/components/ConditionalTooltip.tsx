@@ -3,6 +3,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 interface ConditionalTooltipProps {
     children: React.ReactNode;
     content: React.ReactNode;
+    className?: string;
     enabled: boolean;
 }
 
@@ -10,6 +11,7 @@ export const ConditionalTooltip = ({
     children,
     content,
     enabled,
+    className,
 }: ConditionalTooltipProps) => {
     if (!enabled) {
         return <>{children}</>;
@@ -17,7 +19,7 @@ export const ConditionalTooltip = ({
     return (
         <Tooltip>
             <TooltipTrigger asChild>
-                <div>{children}</div>
+                <div className={className}>{children}</div>
             </TooltipTrigger>
             <TooltipContent>{content}</TooltipContent>
         </Tooltip>

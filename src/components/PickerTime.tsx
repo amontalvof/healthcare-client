@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { twMerge } from 'tailwind-merge';
 import {
     Select,
     SelectContent,
@@ -26,24 +26,30 @@ const PickerTime = ({
 }: PickerTimeProps) => {
     const isTimeDisabled = (label: string) => disabledTimes.includes(label);
 
-    const times: string[] = [];
-    for (let hour = 8; hour <= 17; hour++) {
-        if (hour === 17) {
-            continue;
-        }
+    // timeOptions: value as 'HH:mm:00', label as 'h:mm a'
+    const timeOptions: { value: string; label: string }[] = [];
+    for (let hour = 8; hour < 17; hour++) {
         const dt = new Date();
         dt.setHours(hour, 0, 0, 0);
-        times.push(format(dt, 'h:mm a'));
+        timeOptions.push({
+            value: format(dt, 'HH:mm:ss'),
+            label: format(dt, 'h:mm a'),
+        });
     }
 
     return (
-        <div className={className}>
+        <div className={twMerge('w-full', className)}>
             <Select
                 value={selectedTime}
                 onValueChange={onSelectTime}
                 disabled={disabled}
             >
-                <SelectTrigger className="w-full cursor-pointer bg-white border-gray-400">
+                <SelectTrigger
+                    className={twMerge(
+                        'w-full cursor-pointer bg-white border-gray-400',
+                        className
+                    )}
+                >
                     <SelectValue
                         placeholder={
                             <p className="flex items-center gap-2 text-sm font-normal text-gray-500">
@@ -54,11 +60,11 @@ const PickerTime = ({
                     />
                 </SelectTrigger>
                 <SelectContent>
-                    {times.map((label) => (
+                    {timeOptions.map(({ value, label }) => (
                         <SelectItem
-                            key={label}
-                            value={label}
-                            disabled={isTimeDisabled(label)}
+                            key={value}
+                            value={value}
+                            disabled={isTimeDisabled(value)}
                             className="cursor-pointer"
                         >
                             {label}
