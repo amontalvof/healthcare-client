@@ -65,8 +65,10 @@ const Appointment = () => {
             setSelectedDate(undefined);
             setSelectedTime('');
             setReason('');
-            navigate('/appointments');
-            toast.success('Appointment booked successfully!');
+            setTimeout(() => {
+                navigate('/appointments');
+                toast.success('Appointment booked successfully!');
+            }, 3000);
         },
         onError: () => {
             setSelectedDate(undefined);
@@ -109,8 +111,6 @@ const Appointment = () => {
     const disabledTimes = bookedHours?.map(
         (item: { startTime: string }) => item.startTime
     );
-
-    console.log(disabledTimes);
 
     const handleSelectDate = (date?: Date) => {
         setSelectedDate(date);

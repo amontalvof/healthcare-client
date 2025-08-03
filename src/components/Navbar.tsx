@@ -112,7 +112,7 @@ const Navbar = () => {
                                 align="end"
                                 forceMount
                             >
-                                <DropdownMenuLabel>
+                                <DropdownMenuLabel className="text-sm font-bold">
                                     {user?.fullName}
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
@@ -127,19 +127,6 @@ const Navbar = () => {
                                 >
                                     <DropdownMenuItem className="cursor-pointer">
                                         Patient Profile
-                                    </DropdownMenuItem>
-                                </RouterLink>
-                                <RouterLink
-                                    to="/billing"
-                                    onClick={() =>
-                                        scroll.scrollToTop({
-                                            duration: 1,
-                                            smooth: true,
-                                        })
-                                    }
-                                >
-                                    <DropdownMenuItem className="cursor-pointer">
-                                        Billing
                                     </DropdownMenuItem>
                                 </RouterLink>
                                 <DropdownMenuItem

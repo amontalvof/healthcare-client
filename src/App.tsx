@@ -1,13 +1,6 @@
 import { useEffect } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
-import {
-    Appointments,
-    Appointment,
-    Doctors,
-    Home,
-    Profile,
-    Billing,
-} from './pages';
+import { Appointments, Appointment, Doctors, Home, Profile } from './pages';
 import { Footer, Navbar } from '@/components';
 import { PrivateRoute } from './router/PrivateRoute';
 import { useRedirect } from './context/redirect';
@@ -42,7 +35,6 @@ const App = () => {
                                     element={<Appointment />}
                                 />
                             </Route>
-                            <Route path="billing" element={<Billing />} />
                             <Route path="profile" element={<Profile />} />
                         </Route>
                     </Routes>

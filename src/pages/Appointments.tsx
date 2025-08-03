@@ -12,7 +12,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from 'lucide-react';
-
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -32,7 +32,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { fetchWithToken } from '@/helpers/fetch';
 import { format, parse, parseISO } from 'date-fns';
 
@@ -47,151 +47,6 @@ type AppointmentData = {
     };
 };
 
-const columns: ColumnDef<AppointmentData>[] = [
-    {
-        accessorKey: 'id',
-        cell: ({ row }) => row.getValue<number>('id'),
-        enableHiding: false,
-    },
-    {
-        accessorKey: 'date',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                >
-                    Date
-                    <ArrowUpDown />
-                </Button>
-            );
-        },
-        cell: ({ row }) => {
-            const raw = row.getValue<string>('date');
-            const date = parseISO(raw);
-            return (
-                <div className="pl-3 capitalize">
-                    {format(date, 'EEE dd MMM')}
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'startTime',
-        header: 'Start time',
-        cell: ({ row }) => {
-            const raw = row.getValue<string>('startTime');
-            const date = parse(raw, 'HH:mm:ss', new Date());
-            return <div className="lowercase">{format(date, 'hh:mm a')}</div>;
-        },
-    },
-    {
-        accessorKey: 'endTime',
-        header: 'End time',
-        cell: ({ row }) => {
-            const raw = row.getValue<string>('endTime');
-            const date = parse(raw, 'HH:mm:ss', new Date());
-            return <div className="lowercase">{format(date, 'hh:mm a')}</div>;
-        },
-    },
-    {
-        id: 'doctor',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                >
-                    Doctor
-                    <ArrowUpDown />
-                </Button>
-            );
-        },
-        accessorFn: (row) => row.doctor.fullName,
-        cell: ({ getValue }) => {
-            return <div className="pl-3 capitalize">{getValue<string>()}</div>;
-        },
-    },
-    {
-        accessorKey: 'status',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                >
-                    Status
-                    <ArrowUpDown />
-                </Button>
-            );
-        },
-        cell: ({ row }) => {
-            const status = row.getValue<string>('status');
-            return (
-                <div
-                    className={`pl-3 capitalize ${
-                        status === 'COMPLETED'
-                            ? 'text-green-600'
-                            : status === 'CANCELLED'
-                            ? 'text-red-600'
-                            : 'text-yellow-600'
-                    }`}
-                >
-                    {status}
-                </div>
-            );
-        },
-    },
-
-    {
-        id: 'actions',
-        header: 'Actions',
-        enableHiding: false,
-        cell: ({ row }) => {
-            const status = row.getValue<string>('status');
-            const disableOpenMenu = status === 'COMPLETED';
-            const disableCancel = status === 'CANCELLED';
-
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0 cursor-pointer"
-                            disabled={disableOpenMenu}
-                        >
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => {}}
-                        >
-                            Pay Appointment Fee
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            className="cursor-pointer"
-                            onClick={() => {}}
-                            disabled={disableCancel}
-                        >
-                            Cancel Appointment
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
-        },
-    },
-];
-
 const Appointments = () => {
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: 0,
@@ -204,7 +59,11 @@ const Appointments = () => {
         id: false,
     });
 
-    const { data: appointmentsData, isLoading } = useQuery({
+    const {
+        data: appointmentsData,
+        isLoading,
+        refetch,
+    } = useQuery({
         queryKey: [
             'appointments',
             pagination.pageIndex + 1,
@@ -218,6 +77,177 @@ const Appointments = () => {
             ),
         placeholderData: keepPreviousData,
     });
+
+    const { mutate: cancelAppointment } = useMutation({
+        mutationFn: (appointmentId: number) => {
+            return fetchWithToken(
+                `/appointment/${appointmentId}`,
+                {
+                    status: 'CANCELLED',
+                },
+                'PUT'
+            );
+        },
+        onSuccess: () => {
+            setTimeout(() => {
+                refetch();
+                toast.success('Appointment cancelled successfully!');
+            }, 3000);
+        },
+    });
+
+    const columns: ColumnDef<AppointmentData>[] = [
+        {
+            accessorKey: 'id',
+            cell: ({ row }) => row.getValue<number>('id'),
+            enableHiding: false,
+        },
+        {
+            accessorKey: 'date',
+            sortingFn: (rowA, rowB, columnId) =>
+                parseISO(rowA.getValue<string>(columnId)).getTime() -
+                parseISO(rowB.getValue<string>(columnId)).getTime(),
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            column.toggleSorting(column.getIsSorted() === 'asc')
+                        }
+                    >
+                        Date
+                        <ArrowUpDown />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => {
+                const raw = row.getValue<string>('date');
+                const date = parseISO(raw);
+                return (
+                    <div className="pl-3 capitalize">
+                        {format(date, 'EEE dd MMM')}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'startTime',
+            header: 'Start time',
+            cell: ({ row }) => {
+                const raw = row.getValue<string>('startTime');
+                const date = parse(raw, 'HH:mm:ss', new Date());
+                return (
+                    <div className="lowercase">{format(date, 'hh:mm a')}</div>
+                );
+            },
+        },
+        {
+            accessorKey: 'endTime',
+            header: 'End time',
+            cell: ({ row }) => {
+                const raw = row.getValue<string>('endTime');
+                const date = parse(raw, 'HH:mm:ss', new Date());
+                return (
+                    <div className="lowercase">{format(date, 'hh:mm a')}</div>
+                );
+            },
+        },
+        {
+            id: 'doctor',
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            column.toggleSorting(column.getIsSorted() === 'asc')
+                        }
+                    >
+                        Doctor
+                        <ArrowUpDown />
+                    </Button>
+                );
+            },
+            accessorFn: (row) => row.doctor.fullName,
+            cell: ({ getValue }) => {
+                return (
+                    <div className="pl-3 capitalize">{getValue<string>()}</div>
+                );
+            },
+        },
+        {
+            accessorKey: 'status',
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() =>
+                            column.toggleSorting(column.getIsSorted() === 'asc')
+                        }
+                    >
+                        Status
+                        <ArrowUpDown />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => {
+                const status = row.getValue<string>('status');
+                return (
+                    <div
+                        className={`pl-3 capitalize ${
+                            status === 'COMPLETED'
+                                ? 'text-green-600'
+                                : status === 'CANCELLED'
+                                ? 'text-red-600'
+                                : 'text-yellow-600'
+                        }`}
+                    >
+                        {status}
+                    </div>
+                );
+            },
+        },
+
+        {
+            id: 'actions',
+            header: 'Actions',
+            enableHiding: false,
+            cell: ({ row }) => {
+                const status = row.getValue<string>('status');
+                const disableOpenMenu =
+                    status === 'COMPLETED' || status === 'CANCELLED';
+                const appointmentId = row.getValue<number>('id');
+                return (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                className="h-8 w-8 p-0 cursor-pointer"
+                                disabled={disableOpenMenu}
+                            >
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => {}}
+                            >
+                                Pay Appointment Fee
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => cancelAppointment(appointmentId)}
+                            >
+                                Cancel Appointment
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                );
+            },
+        },
+    ];
 
     const table = useReactTable({
         data: appointmentsData?.data ?? [],
@@ -282,7 +312,7 @@ const Appointments = () => {
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="outline"
-                            className="ml-auto bg-white border-gray-400"
+                            className="ml-auto bg-white border-gray-400 cursor-pointer"
                         >
                             Columns <ChevronDown />
                         </Button>
