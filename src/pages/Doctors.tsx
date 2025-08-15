@@ -1,8 +1,7 @@
 import { DoctorCard } from '@/components';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { fetchWithoutToken } from '@/helpers/fetch';
-import { prettyTimeRange } from '@/helpers';
+import { fetchWithoutToken, prettyTimeRange } from '@/helpers';
 import { IDoctor, IDoctorSpecialty } from '@/types/Doctor';
 import { useQueries } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';

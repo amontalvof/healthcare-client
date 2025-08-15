@@ -1,5 +1,5 @@
 import { AuthTypes } from '@/constants';
-import { fetchWithoutToken } from '@/helpers/fetch';
+import { fetchWithoutToken } from '@/helpers';
 
 export const authQueries = async (type: AuthTypes, data: Object) => {
     switch (type) {

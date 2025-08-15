@@ -8,10 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera } from 'lucide-react';
 import { useAuthCredentials } from '@/context/auth';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { fetchWithToken } from '@/helpers/fetch';
 import { useForm } from 'react-hook-form';
 import { z, ZodTypeAny, ZodIssueCode } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ESex } from '@/types/Patient';
+import { format, parse } from 'date-fns';
+import { cn } from '@/lib/utils';
 import {
     Form,
     FormControl,
@@ -20,11 +23,8 @@ import {
     FormLabel,
     FormMessage,
 } from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ESex } from '@/types/Patient';
-import { format, parse } from 'date-fns';
-import { cn } from '@/lib/utils';
 import {
+    fetchWithToken,
     formatPhoneNumber,
     phoneNumberValidator,
     resolveUserInfo,

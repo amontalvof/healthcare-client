@@ -1,12 +1,11 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { HospitalAddress } from '@/types/Doctor';
-import { formatAddress } from '@/helpers';
+import { formatAddress, fetchWithoutToken } from '@/helpers';
 import { useQueries } from '@tanstack/react-query';
-import { fetchWithoutToken } from '@/helpers/fetch';
 
 type Props = { hospitalsNames: string[]; hospitals: HospitalAddress[] };
 
-export const HospitalMap: React.FC<Props> = ({ hospitals, hospitalsNames }) => {
+const HospitalMap: React.FC<Props> = ({ hospitals, hospitalsNames }) => {
     const geocodeQueries = useQueries({
         queries: hospitals.map((h) => ({
             queryKey: [
@@ -85,3 +84,5 @@ export const HospitalMap: React.FC<Props> = ({ hospitals, hospitalsNames }) => {
         </MapContainer>
     );
 };
+
+export default HospitalMap;

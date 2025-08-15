@@ -7,7 +7,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { fetchWithToken } from '@/helpers/fetch';
+import { fetchWithToken } from '@/helpers';
 import { useQuery } from '@tanstack/react-query';
 import { IOriginal } from '@/types/Appointment';
 

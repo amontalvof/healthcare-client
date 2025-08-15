@@ -3,19 +3,25 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import doctorFallback from '../assets/images/doctor.webp';
 import { Button } from '@/components/ui/button';
-import { PickerDate, PickerTime } from '@/components';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchWithoutToken, fetchWithToken } from '@/helpers/fetch';
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import { IDoctor } from '@/types/Doctor';
-import { HospitalMap } from '@/components/HospitalMap';
 import { useState } from 'react';
 import { useAuthCredentials } from '@/context/auth';
-import { resolveUserInfo } from '@/helpers';
-import { ConditionalTooltip } from '@/components/ConditionalTooltip';
 import { Textarea } from '@/components/ui/textarea';
-import formatStartAndEndTime from '@/helpers/formatStartAndEndTime';
-import { formatDate } from '@/helpers/formatDate';
+import {
+    HospitalMap,
+    ConditionalTooltip,
+    PickerDate,
+    PickerTime,
+} from '@/components';
+import {
+    fetchWithoutToken,
+    fetchWithToken,
+    formatDate,
+    formatStartAndEndTime,
+    resolveUserInfo,
+} from '@/helpers';
 
 const resolveTooltipText = (
     isSelectedDate: boolean,

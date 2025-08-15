@@ -7,7 +7,7 @@ interface ConditionalTooltipProps {
     enabled: boolean;
 }
 
-export const ConditionalTooltip = ({
+const ConditionalTooltip = ({
     children,
     content,
     enabled,
@@ -25,3 +25,5 @@ export const ConditionalTooltip = ({
         </Tooltip>
     );
 };
+
+export default ConditionalTooltip;

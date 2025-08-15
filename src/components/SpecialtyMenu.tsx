@@ -1,7 +1,7 @@
 import { Element, animateScroll as scroll } from 'react-scroll';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { fetchWithoutToken } from '@/helpers/fetch';
+import { fetchWithoutToken } from '@/helpers';
 import { IDoctorSpecialty } from '@/types/Doctor';
 
 const SpecialtyMenu = () => {

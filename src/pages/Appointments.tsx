@@ -33,9 +33,9 @@ import {
 } from '@/components/ui/table';
 import { useState } from 'react';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
-import { fetchWithToken } from '@/helpers/fetch';
+import { fetchWithToken } from '@/helpers';
 import { format, parse, parseISO } from 'date-fns';
-import PaymentDialog from '@/components/PaymentDialog';
+import { PaymentDialog } from '@/components';
 import { IOriginal } from '@/types/Appointment';
 
 type AppointmentData = {
