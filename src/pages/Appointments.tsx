@@ -35,6 +35,8 @@ import { useState } from 'react';
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { fetchWithToken } from '@/helpers/fetch';
 import { format, parse, parseISO } from 'date-fns';
+import PaymentDialog from '@/components/PaymentDialog';
+import { IOriginal } from '@/types/Appointment';
 
 type AppointmentData = {
     id: number;
@@ -43,6 +45,11 @@ type AppointmentData = {
     endTime: string;
     status: string;
     doctor: {
+        fullName: string;
+        degree: string;
+        fees: number;
+    };
+    patient: {
         fullName: string;
     };
 };
@@ -216,34 +223,57 @@ const Appointments = () => {
                 const disableOpenMenu =
                     status === 'COMPLETED' || status === 'CANCELLED';
                 const appointmentId = row.getValue<number>('id');
+                const [payOpen, setPayOpen] = useState(false);
+                const original: IOriginal = {
+                    appointmentId,
+                    date: row.original.date,
+                    startTime: row.original.startTime,
+                    endTime: row.original.endTime,
+                    doctorName: row.original.doctor.fullName,
+                    doctorDegree: row.original.doctor.degree,
+                    patientName: row.original.patient.fullName,
+                    price: row.original.doctor.fees,
+                    quantity: 1,
+                };
                 return (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                className="h-8 w-8 p-0 cursor-pointer"
-                                disabled={disableOpenMenu}
-                            >
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() => {}}
-                            >
-                                Pay Appointment Fee
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() => cancelAppointment(appointmentId)}
-                            >
-                                Cancel Appointment
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 cursor-pointer"
+                                    disabled={disableOpenMenu}
+                                >
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    className="!cursor-pointer"
+                                    onSelect={() => {
+                                        setTimeout(() => setPayOpen(true), 0); // or requestAnimationFrame
+                                    }}
+                                >
+                                    Pay Appointment Fee
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    className="!cursor-pointer"
+                                    onClick={() =>
+                                        cancelAppointment(appointmentId)
+                                    }
+                                >
+                                    Cancel Appointment
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <PaymentDialog
+                            open={payOpen}
+                            original={original}
+                            onOpenChange={setPayOpen}
+                        />
+                    </>
                 );
             },
         },
