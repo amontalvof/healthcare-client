@@ -52,6 +52,7 @@ type AppointmentData = {
     patient: {
         fullName: string;
     };
+    isPaid: boolean;
 };
 
 const Appointments = () => {
@@ -213,7 +214,6 @@ const Appointments = () => {
                 );
             },
         },
-
         {
             id: 'actions',
             header: 'Actions',
@@ -223,6 +223,7 @@ const Appointments = () => {
                 const disableOpenMenu =
                     status === 'COMPLETED' || status === 'CANCELLED';
                 const appointmentId = row.getValue<number>('id');
+                const isPaid = row.original.isPaid;
                 const [payOpen, setPayOpen] = useState(false);
                 const original: IOriginal = {
                     appointmentId,
@@ -250,6 +251,7 @@ const Appointments = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem
+                                    disabled={isPaid}
                                     className="!cursor-pointer"
                                     onSelect={() => {
                                         setTimeout(() => setPayOpen(true), 0); // or requestAnimationFrame
