@@ -8,4 +8,5 @@ export interface IOriginal {
     patientName: string;
     price: number;
     quantity: number;
+    paymentIntentId?: string | null;
 }

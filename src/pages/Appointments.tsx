@@ -37,6 +37,7 @@ import { fetchWithToken } from '@/helpers';
 import { format, parse, parseISO } from 'date-fns';
 import { PaymentDialog } from '@/components';
 import { IOriginal } from '@/types/Appointment';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 type AppointmentData = {
     id: number;
@@ -53,6 +54,7 @@ type AppointmentData = {
         fullName: string;
     };
     isPaid: boolean;
+    paymentIntentId?: string | null;
 };
 
 const Appointments = () => {
@@ -101,6 +103,26 @@ const Appointments = () => {
                 refetch();
                 toast.success('Appointment cancelled successfully!');
             }, 3000);
+        },
+    });
+
+    const { mutate: refundPayment } = useMutation({
+        mutationFn: ({
+            appointmentId,
+            paymentIntentId,
+        }: {
+            appointmentId: number;
+            paymentIntentId: string;
+        }) => {
+            return fetchWithToken(
+                `/billing/refund`,
+                {
+                    appointmentId,
+                    paymentIntentId,
+                    reason: 'requested_by_customer',
+                },
+                'POST'
+            );
         },
     });
 
@@ -225,6 +247,8 @@ const Appointments = () => {
                 const appointmentId = row.getValue<number>('id');
                 const isPaid = row.original.isPaid;
                 const [payOpen, setPayOpen] = useState(false);
+                const [confirmOpen, setConfirmOpen] = useState(false);
+
                 const original: IOriginal = {
                     appointmentId,
                     date: row.original.date,
@@ -254,7 +278,7 @@ const Appointments = () => {
                                     disabled={isPaid}
                                     className="!cursor-pointer"
                                     onSelect={() => {
-                                        setTimeout(() => setPayOpen(true), 0); // or requestAnimationFrame
+                                        setTimeout(() => setPayOpen(true), 0);
                                     }}
                                 >
                                     Pay Appointment Fee
@@ -262,9 +286,12 @@ const Appointments = () => {
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                     className="!cursor-pointer"
-                                    onClick={() =>
-                                        cancelAppointment(appointmentId)
-                                    }
+                                    onClick={() => {
+                                        setTimeout(
+                                            () => setConfirmOpen(true),
+                                            0
+                                        );
+                                    }}
                                 >
                                     Cancel Appointment
                                 </DropdownMenuItem>
@@ -274,6 +301,15 @@ const Appointments = () => {
                             open={payOpen}
                             original={original}
                             onOpenChange={setPayOpen}
+                        />
+                        <ConfirmDialog
+                            open={confirmOpen}
+                            onOpenChange={setConfirmOpen}
+                            isPaid={isPaid}
+                            paymentIntentId={row.original.paymentIntentId}
+                            appointmentId={appointmentId}
+                            cancelAppointment={cancelAppointment}
+                            refundPayment={refundPayment}
                         />
                     </>
                 );
