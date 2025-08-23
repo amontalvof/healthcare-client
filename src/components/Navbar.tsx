@@ -35,9 +35,8 @@ import { IUserAuth } from '@/types/AuthDialog';
 
 const Navbar = () => {
     const [open, setOpen] = useState(false);
-    const { accessToken, clearCredentials, imagePreview } = useAuthCredentials(
-        (state) => state
-    );
+    const { accessToken, clearCredentials, imagePreview, clearImagePreview } =
+        useAuthCredentials((state) => state);
     const user = resolveUserInfo(accessToken);
 
     const handleCloseSheet = () => {
@@ -130,7 +129,10 @@ const Navbar = () => {
                                     </DropdownMenuItem>
                                 </RouterLink>
                                 <DropdownMenuItem
-                                    onSelect={() => clearCredentials()}
+                                    onSelect={() => {
+                                        clearCredentials();
+                                        clearImagePreview();
+                                    }}
                                     className="cursor-pointer"
                                 >
                                     Logout

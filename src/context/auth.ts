@@ -7,6 +7,7 @@ interface AuthState {
     setImagePreview: (url: string | undefined) => void;
     setCredentials: (token: string) => void;
     clearCredentials: () => void;
+    clearImagePreview: () => void;
 }
 
 export const useAuthCredentials = create<AuthState>()(
@@ -16,6 +17,7 @@ export const useAuthCredentials = create<AuthState>()(
             imagePreview: undefined,
             setImagePreview: (url: string | undefined) =>
                 set({ imagePreview: url }),
+            clearImagePreview: () => set({ imagePreview: undefined }),
             setCredentials: (token: string) => set({ accessToken: token }),
             clearCredentials: () => set({ accessToken: null }),
         }),
